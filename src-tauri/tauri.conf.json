@@ -36,7 +36,10 @@
       "icons/icon.ico"
     ],
     "windows": {
-      "webviewInstallMode": "offlineInstaller"
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper",
+        "silent": true
+      }
     }
   }
 }
