@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="/src/styles.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>発表時間管理</title>
+    <script type="module" src="/src/main.ts" defer></script>
+  </head>
+
+  <body>
+    <!-- 設定画面 -->
+    <div id="setup-view" class="container">
+      <h1>発表時間管理 - 設定</h1>
+      <div class="timer-setup-grid">
+        <div class="timer-setup">
+          <label for="minutes-presentation">発表時間:</label>
+          <input type="number" id="minutes-presentation" value="5" min="0" max="99" />
+          <span>分</span>
+          <input type="number" id="seconds-presentation" value="0" min="0" max="59" />
+          <span>秒</span>
+        </div>
+        <div class="timer-setup">
+          <label for="minutes-qa">質疑応答:</label>
+          <input type="number" id="minutes-qa" value="3" min="0" max="99" />
+          <span>分</span>
+          <input type="number" id="seconds-qa" value="0" min="0" max="59" />
+          <span>秒</span>
+        </div>
+      </div>
+      <button id="go-to-timer-view">タイマー表示へ</button>
+      <p id="setup-status-message"></p>
+    </div>
+
+    <!-- タイマー表示画面 -->
+    <div id="timer-view" class="container" style="display: none;">
+      <div id="timer-stage-label" class="stage-label"></div>
+      <div class="timer-display">
+        <span id="timer-minutes">00</span>:<span id="timer-seconds">00</span>
+      </div>
+
+      <div class="controls">
+        <button id="start-timer">開始</button>
+        <button id="stop-timer">停止</button>
+        <button id="reset-timer">リセット</button>
+      </div>
+
+      <p id="status-message"></p>
+      <button id="go-to-setup-view">設定に戻る</button>
+    </div>
+  </body>
+</html>
