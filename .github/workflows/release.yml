@@ -8,10 +8,6 @@ on:
 
 jobs:
   build:
-    defaults:
-      run:
-        working-directory: ./time-app
-
     strategy:
       fail-fast: false
       matrix:
@@ -46,4 +42,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: tauri-app-${{ runner.os }}
-          path: ./time-app/src-tauri/target/release/bundle/
+          path: src-tauri/target/release/bundle/
