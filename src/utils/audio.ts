@@ -50,3 +50,8 @@ export function playWarningSound() {
 export function playOvertimeSound() {
     playBeep(2, 1760, 0.1);
 }
+
+// 全終了音（質疑応答終了）: ピピピ
+export function playFinishSound() {
+    playBeep(3, 1760, 0.1);
+}

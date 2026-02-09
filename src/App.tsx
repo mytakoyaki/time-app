@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { load } from "@tauri-apps/plugin-store";
+import { playWarningSound, playOvertimeSound, playFinishSound } from "./utils/audio";
 
 interface TimerStage {
   name: string;
@@ -46,6 +47,7 @@ function App() {
   
   // Settings
   const [deductOvertime, setDeductOvertime] = useState(true);
+  const [enableSound, setEnableSound] = useState(true);
   
   // Presets
   const [presets, setPresets] = useState<Preset[]>(DEFAULT_PRESETS);
@@ -72,10 +74,11 @@ function App() {
   const currentStageIndexRef = useRef(0);
   const currentRemainingSecondsRef = useRef(0);
   const isTimerRunningRef = useRef(false);
+  const enableSoundRef = useRef(true);
 
   // --- Effects ---
 
-  // Load presets from Store on mount
+  // Load presets and settings from Store on mount
   useEffect(() => {
     const initStore = async () => {
         try {
@@ -84,12 +87,16 @@ function App() {
             if (savedPresets) {
                 setPresets(savedPresets);
             } else {
-                // If no file/key exists, save the defaults so deletions/edits work on them immediately
                 await store.set("presets", DEFAULT_PRESETS);
                 await store.save();
             }
+            
+            const savedEnableSound = await store.get<boolean>("enableSound");
+            if (savedEnableSound !== null && savedEnableSound !== undefined) {
+                setEnableSound(savedEnableSound);
+            }
         } catch (e) {
-            console.error("Failed to load presets from store", e);
+            console.error("Failed to load presets/settings from store", e);
         }
     };
     initStore();
@@ -111,6 +118,10 @@ function App() {
   useEffect(() => {
     currentRemainingSecondsRef.current = currentRemainingSeconds;
   }, [currentRemainingSeconds]);
+  
+  useEffect(() => {
+    enableSoundRef.current = enableSound;
+  }, [enableSound]);
 
 
   // Event Listeners
@@ -120,11 +131,36 @@ function App() {
 
     const setupListeners = async () => {
       unlistenUpdate = await listen<number>("timer-update", (event) => {
-        setCurrentRemainingSeconds(event.payload);
+        const remaining = event.payload;
+        setCurrentRemainingSeconds(remaining);
+        
+        // Sound Logic
+        const stages = timerStagesRef.current;
+        const index = currentStageIndexRef.current;
+        const soundOn = enableSoundRef.current;
+        
+        if (soundOn && stages.length > 0 && index < stages.length) {
+            const currentStage = stages[index];
+            const isQA = currentStage.name.includes("質疑"); // Simple check
+            
+            // Warning sound
+            if (!isQA && remaining === currentStage.warningThreshold && remaining > 0) {
+                playWarningSound();
+            }
+            
+            // Overtime/Finish sound (at exactly 0)
+            if (remaining === 0) {
+                if (isQA) {
+                    playFinishSound(); // QA finish (3 beeps)
+                } else {
+                    playOvertimeSound(); // Presentation finish (2 beeps)
+                }
+            }
+        }
       });
       
       unlistenFinished = await listen("timer-finished", async () => {
-         // Notification sound logic here if needed
+         // (Handled in timer-update for precise timing with 0)
       });
     };
 
@@ -137,6 +173,17 @@ function App() {
   }, []); 
 
   // --- Handlers ---
+  
+  const handleToggleSound = async (checked: boolean) => {
+      setEnableSound(checked);
+      try {
+          const store = await load(PRESETS_FILE);
+          await store.set("enableSound", checked);
+          await store.save();
+      } catch (e) {
+          console.error("Failed to save sound setting", e);
+      }
+  };
 
   const handleApplyPreset = (preset: Preset) => {
       setPresentationMinutes(preset.pMin);
@@ -561,6 +608,16 @@ function App() {
           </div>
           
           <div className="timer-options">
+            <div className="timer-option-row">
+                <input 
+                    type="checkbox" 
+                    id="enable-sound"
+                    checked={enableSound}
+                    onChange={(e) => handleToggleSound(e.target.checked)}
+                    style={{width: "20px", height: "20px"}} 
+                />
+                <label htmlFor="enable-sound" style={{cursor: "pointer"}}>通知音を鳴らす</label>
+            </div>
             <div className="timer-option-row">
                 <input 
                     type="checkbox" 
