@@ -83,6 +83,10 @@ function App() {
             const savedPresets = await store.get<Preset[]>("presets");
             if (savedPresets) {
                 setPresets(savedPresets);
+            } else {
+                // If no file/key exists, save the defaults so deletions/edits work on them immediately
+                await store.set("presets", DEFAULT_PRESETS);
+                await store.save();
             }
         } catch (e) {
             console.error("Failed to load presets from store", e);
