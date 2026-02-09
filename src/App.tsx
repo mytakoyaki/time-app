@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
+import { load } from "@tauri-apps/plugin-store";
 
 interface TimerStage {
   name: string;
@@ -26,6 +27,8 @@ const DEFAULT_PRESETS: Preset[] = [
     { id: "lt", name: "LT (5分/なし)", pMin: 5, pSec: 0, qMin: 0, qSec: 0, pWarn: 60, qWarn: 0 },
 ];
 
+const PRESETS_FILE = "settings.json";
+
 function App() {
   // --- State ---
   // View
@@ -46,7 +49,7 @@ function App() {
   // Presets
   const [presets, setPresets] = useState<Preset[]>(DEFAULT_PRESETS);
   
-  // Preset Manager Inputs (for editing/creating)
+  // Preset Manager Inputs
   const [editingPresetId, setEditingPresetId] = useState<string | null>(null);
   const [pmName, setPmName] = useState("");
   const [pmPMin, setPmPMin] = useState(5);
@@ -71,16 +74,20 @@ function App() {
 
   // --- Effects ---
 
-  // Load presets from localStorage on mount
+  // Load presets from Store on mount
   useEffect(() => {
-    const savedPresets = localStorage.getItem("timer_presets");
-    if (savedPresets) {
+    const initStore = async () => {
         try {
-            setPresets(JSON.parse(savedPresets));
+            const store = await load(PRESETS_FILE);
+            const savedPresets = await store.get<Preset[]>("presets");
+            if (savedPresets) {
+                setPresets(savedPresets);
+            }
         } catch (e) {
-            console.error("Failed to parse saved presets", e);
+            console.error("Failed to load presets from store", e);
         }
-    }
+    };
+    initStore();
   }, []);
 
   // Sync refs with state
@@ -156,7 +163,7 @@ function App() {
       setPmQMin(preset.qMin); setPmQSec(preset.qSec); setPmQWarn(preset.qWarn);
   };
 
-  const handleSavePresetManager = () => {
+  const handleSavePresetManager = async () => {
       if (!pmName) {
           alert("プリセット名を入力してください。");
           return;
@@ -171,26 +178,40 @@ function App() {
 
       let newPresets: Preset[];
       if (editingPresetId) {
-          // Update existing
           newPresets = presets.map(p => p.id === editingPresetId ? newPreset : p);
       } else {
-          // Add new
           newPresets = [...presets, newPreset];
       }
 
       setPresets(newPresets);
-      localStorage.setItem("timer_presets", JSON.stringify(newPresets));
-      resetPresetManagerForm();
+      
+      // Save to Store
+      try {
+          const store = await load(PRESETS_FILE);
+          await store.set("presets", newPresets);
+          await store.save();
+          resetPresetManagerForm();
+      } catch (e) {
+          console.error("Failed to save to store", e);
+      }
   };
 
-  const handleDeletePreset = (id: string, e?: React.MouseEvent) => {
+  const handleDeletePreset = async (id: string, e?: React.MouseEvent) => {
       if(e) e.stopPropagation();
       if (!window.confirm("このプリセットを削除してもよろしいですか？")) return;
       
       const newPresets = presets.filter(p => p.id !== id);
       setPresets(newPresets);
-      localStorage.setItem("timer_presets", JSON.stringify(newPresets));
-      if (editingPresetId === id) resetPresetManagerForm();
+      
+      // Save to Store
+      try {
+          const store = await load(PRESETS_FILE);
+          await store.set("presets", newPresets);
+          await store.save();
+          if (editingPresetId === id) resetPresetManagerForm();
+      } catch (e) {
+          console.error("Failed to save to store", e);
+      }
   };
 
   const handleBackToSetup = () => {

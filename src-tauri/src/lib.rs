@@ -52,6 +52,7 @@ fn reset_timer(state: tauri::State<'_, Arc<Mutex<TimerState>>>) -> Result<(), St
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_store::Builder::new().build()) // Add this line
         .plugin(tauri_plugin_opener::init())
         .manage(Arc::new(Mutex::new(TimerState::default())))
         .invoke_handler(tauri::generate_handler![greet, start_timer, stop_timer, reset_timer])
