@@ -196,16 +196,21 @@ function App() {
           const store = await load(PRESETS_FILE);
           await store.set("presets", newPresets);
           await store.save();
+          setStatusMessage(`プリセット「${pmName}」を保存しました。`); // Success message
           resetPresetManagerForm();
           setActivePresetTab("list"); // Return to list after save
       } catch (e) {
           console.error("Failed to save to store", e);
+          setStatusMessage("保存に失敗しました。");
       }
   };
 
   const handleDeletePreset = async (id: string, e?: React.MouseEvent) => {
       if(e) e.stopPropagation();
-      if (!window.confirm("このプリセットを削除してもよろしいですか？")) return;
+      const presetToDelete = presets.find(p => p.id === id);
+      const name = presetToDelete ? presetToDelete.name : "";
+
+      if (!window.confirm(`プリセット「${name}」を削除してもよろしいですか？`)) return;
       
       const newPresets = presets.filter(p => p.id !== id);
       setPresets(newPresets);
@@ -214,12 +219,14 @@ function App() {
           const store = await load(PRESETS_FILE);
           await store.set("presets", newPresets);
           await store.save();
+          setStatusMessage(`プリセット「${name}」を削除しました。`); // Success message
           if (editingPresetId === id) {
               resetPresetManagerForm();
               setActivePresetTab("list");
           }
       } catch (e) {
           console.error("Failed to save to store", e);
+          setStatusMessage("削除に失敗しました。");
       }
   };
 
@@ -453,6 +460,8 @@ function App() {
                       </ul>
                   </div>
               )}
+
+              <p className="manager-status-message">{statusMessage}</p>
 
               <button onClick={handleBackToSetup} className="back-btn">設定画面に戻る</button>
           </div>
