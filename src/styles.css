@@ -52,14 +52,16 @@ h1 {
   font-size: 3rem; 
 }
 
-.preset-container {
+/* Preset Selection Area */
+.preset-selection-area {
     display: flex;
     flex-direction: column;
     align-items: center;
     width: 100%;
+    margin-bottom: 1rem;
 }
 
-.preset-container h3 {
+.preset-selection-area h3 {
     margin: 0 0 0.5rem 0;
     color: #888;
     font-size: 1.2rem;
@@ -71,49 +73,198 @@ h1 {
     flex-wrap: wrap;
     justify-content: center;
     max-width: 80%;
-}
-
-.preset-wrapper {
-    display: flex;
-    align-items: center;
-    background-color: #333;
-    border: 1px solid #555;
-    border-radius: 6px;
-    padding: 0;
-    overflow: hidden;
+    margin-bottom: 0.5rem;
 }
 
 .preset-btn {
-    background: transparent;
-    border: none;
+    background-color: #333;
+    border: 1px solid #555;
     font-size: 1rem;
-    padding: 0.6em 1em;
+    padding: 0.6em 1.2em;
     color: #eee;
-    cursor: pointer;
-    border-right: 1px solid #555;
-    border-radius: 0;
+    border-radius: 6px;
 }
 
 .preset-btn:hover {
     background-color: #444;
+    border-color: #888;
 }
 
-.preset-delete-btn {
+.manage-presets-link {
     background: transparent;
     border: none;
-    color: #888;
-    font-size: 1.2rem;
-    padding: 0 0.5em;
+    text-decoration: underline;
+    color: #646cff;
+    font-size: 0.9rem;
     cursor: pointer;
-    line-height: 1;
-    border-radius: 0;
+    padding: 0;
 }
 
-.preset-delete-btn:hover {
-    background-color: #500;
+.manage-presets-link:hover {
+    color: #8888ff;
+    background: transparent;
+    border: none;
+}
+
+
+/* Preset Manager View Styles */
+#preset-manager-view {
+    justify-content: flex-start;
+    padding-top: 5vh;
+    gap: 2rem;
+}
+
+.preset-editor {
+    background: #111;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #333;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 80%;
+    max-width: 800px;
+}
+
+.preset-editor h3 {
+    margin: 0;
+    border-bottom: 1px solid #333;
+    padding-bottom: 0.5rem;
+}
+
+.editor-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.name-input {
+    flex-grow: 1;
+    padding: 0.5rem;
+    font-size: 1.2rem;
+    background: #222;
+    border: 1px solid #444;
+    color: white;
+    border-radius: 4px;
+}
+
+.editor-columns {
+    display: flex;
+    gap: 2rem;
+    justify-content: space-between;
+}
+
+.editor-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.editor-column h4 {
+    margin: 0;
+    color: #aaa;
+}
+
+.editor-time-row input, .editor-warn-row input {
+    width: 60px;
+    padding: 0.3rem;
+    font-size: 1.1rem;
+    text-align: center;
+    background: #222;
+    border: 1px solid #444;
+    color: white;
+    border-radius: 4px;
+    margin-right: 0.3rem;
+}
+
+.editor-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.save-btn {
+    background-color: #2a2a2a;
+    border-color: #646cff;
     color: white;
 }
+.save-btn:hover {
+    background-color: #646cff;
+}
 
+.cancel-btn {
+    background-color: transparent;
+    border-color: #555;
+}
+
+.preset-list {
+    width: 80%;
+    max-width: 800px;
+    flex-grow: 1;
+    overflow-y: auto;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 1rem;
+    background: #0a0a0a;
+}
+
+.preset-list ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.preset-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.8rem;
+    border-bottom: 1px solid #222;
+    cursor: pointer;
+}
+
+.preset-list li:hover {
+    background: #151515;
+}
+
+.preset-list li.editing {
+    background: #222;
+    border-left: 4px solid #646cff;
+}
+
+.preset-name {
+    font-weight: bold;
+    flex: 1;
+}
+
+.preset-details {
+    color: #888;
+    font-size: 0.9rem;
+    margin-right: 1rem;
+}
+
+.delete-icon {
+    background: transparent;
+    border: none;
+    color: #666;
+    font-size: 1.5rem;
+    padding: 0 0.5rem;
+    border-radius: 4px;
+}
+.delete-icon:hover {
+    color: #ef233c;
+    background: #300;
+}
+
+.back-btn {
+    margin-bottom: 2rem;
+    border-color: #555;
+}
+
+
+/* Main Setup Inputs */
 .timer-setup-grid {
     display: flex;
     justify-content: center;
@@ -203,26 +354,6 @@ h1 {
   display: flex;
   align-items: center;
   gap: 0.8rem;
-}
-
-.action-buttons {
-    display: flex;
-    gap: 2rem;
-    align-items: center;
-}
-
-.save-preset-btn {
-    font-size: 1rem;
-    padding: 0.8em 1.5em;
-    background-color: #1a1a1a;
-    border: 1px dashed #666;
-    color: #aaa;
-}
-
-.save-preset-btn:hover {
-    background-color: #2a2a2a;
-    border-color: #aaa;
-    color: white;
 }
 
 .start-btn {

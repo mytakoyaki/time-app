@@ -9,7 +9,7 @@ interface TimerStage {
 }
 
 interface Preset {
-    id: string; // Add ID for easier management
+    id: string; 
     name: string;
     pMin: number;
     pSec: number;
@@ -29,7 +29,7 @@ const DEFAULT_PRESETS: Preset[] = [
 function App() {
   // --- State ---
   // View
-  const [view, setView] = useState<"setup" | "timer">("setup");
+  const [view, setView] = useState<"setup" | "timer" | "preset-manager">("setup");
 
   // Inputs
   const [presentationMinutes, setPresentationMinutes] = useState(5);
@@ -45,6 +45,16 @@ function App() {
   
   // Presets
   const [presets, setPresets] = useState<Preset[]>(DEFAULT_PRESETS);
+  
+  // Preset Manager Inputs (for editing/creating)
+  const [editingPresetId, setEditingPresetId] = useState<string | null>(null);
+  const [pmName, setPmName] = useState("");
+  const [pmPMin, setPmPMin] = useState(5);
+  const [pmPSec, setPmPSec] = useState(0);
+  const [pmPWarn, setPmPWarn] = useState(60);
+  const [pmQMin, setPmQMin] = useState(3);
+  const [pmQSec, setPmQSec] = useState(0);
+  const [pmQWarn, setPmQWarn] = useState(30);
 
   // Timer Logic
   const [timerStages, setTimerStages] = useState<TimerStage[]>([]);
@@ -126,36 +136,68 @@ function App() {
       setStatusMessage(`プリセット「${preset.name}」を適用しました。`);
   };
   
-  const handleSavePreset = () => {
-      const name = window.prompt("新しいプリセットの名前を入力してください:", "カスタム設定");
-      if (!name) return;
-      
+  // Preset Manager Handlers
+  const handleOpenPresetManager = () => {
+      resetPresetManagerForm();
+      setView("preset-manager");
+  };
+
+  const resetPresetManagerForm = () => {
+      setEditingPresetId(null);
+      setPmName("");
+      setPmPMin(5); setPmPSec(0); setPmPWarn(60);
+      setPmQMin(3); setPmQSec(0); setPmQWarn(30);
+  };
+
+  const handleEditPreset = (preset: Preset) => {
+      setEditingPresetId(preset.id);
+      setPmName(preset.name);
+      setPmPMin(preset.pMin); setPmPSec(preset.pSec); setPmPWarn(preset.pWarn);
+      setPmQMin(preset.qMin); setPmQSec(preset.qSec); setPmQWarn(preset.qWarn);
+  };
+
+  const handleSavePresetManager = () => {
+      if (!pmName) {
+          alert("プリセット名を入力してください。");
+          return;
+      }
+
       const newPreset: Preset = {
-          id: Date.now().toString(),
-          name,
-          pMin: presentationMinutes,
-          pSec: presentationSeconds,
-          qMin: qaMinutes,
-          qSec: qaSeconds,
-          pWarn: presentationWarningSeconds,
-          qWarn: qaWarningSeconds
+          id: editingPresetId || Date.now().toString(),
+          name: pmName,
+          pMin: pmPMin, pSec: pmPSec, pWarn: pmPWarn,
+          qMin: pmQMin, qSec: pmQSec, qWarn: pmQWarn
       };
-      
-      const newPresets = [...presets, newPreset];
+
+      let newPresets: Preset[];
+      if (editingPresetId) {
+          // Update existing
+          newPresets = presets.map(p => p.id === editingPresetId ? newPreset : p);
+      } else {
+          // Add new
+          newPresets = [...presets, newPreset];
+      }
+
       setPresets(newPresets);
       localStorage.setItem("timer_presets", JSON.stringify(newPresets));
-      setStatusMessage(`プリセット「${name}」を保存しました。`);
+      resetPresetManagerForm();
   };
-  
-  const handleDeletePreset = (id: string, name: string, e: React.MouseEvent) => {
-      e.stopPropagation(); // Prevent applying the preset when clicking delete
-      if (!window.confirm(`プリセット「${name}」を削除してもよろしいですか？`)) return;
+
+  const handleDeletePreset = (id: string, e?: React.MouseEvent) => {
+      if(e) e.stopPropagation();
+      if (!window.confirm("このプリセットを削除してもよろしいですか？")) return;
       
       const newPresets = presets.filter(p => p.id !== id);
       setPresets(newPresets);
       localStorage.setItem("timer_presets", JSON.stringify(newPresets));
-      setStatusMessage(`プリセット「${name}」を削除しました。`);
+      if (editingPresetId === id) resetPresetManagerForm();
   };
+
+  const handleBackToSetup = () => {
+      setView("setup");
+      setStatusMessage("");
+  };
+
 
   const formatTime = (totalSeconds: number) => {
     const absSeconds = Math.abs(totalSeconds);
@@ -285,10 +327,8 @@ function App() {
   // --- Render ---
   const { minutes: displayMinutes, seconds: displaySeconds } = formatTime(currentRemainingSeconds);
   
-  // Determine CSS classes
   const currentStage = timerStages[currentStageIndex];
   const isOvertime = currentRemainingSeconds < 0;
-  // Use stage-specific warning threshold
   const threshold = currentStage?.warningThreshold || 60;
   const isWarning = !isOvertime && currentRemainingSeconds <= threshold && currentRemainingSeconds > 0;
   
@@ -298,30 +338,95 @@ function App() {
 
   const currentStageName = currentStage?.name || (currentStageIndex >= timerStages.length ? "完了" : "準備中");
 
+  if (view === "preset-manager") {
+      return (
+          <div className="container" id="preset-manager-view">
+              <h1>プリセット管理</h1>
+              
+              <div className="preset-editor">
+                  <h3>{editingPresetId ? "プリセットを編集" : "新しいプリセットを作成"}</h3>
+                  <div className="editor-row">
+                      <label>名前:</label>
+                      <input 
+                        type="text" 
+                        value={pmName} 
+                        onChange={(e) => setPmName(e.target.value)} 
+                        placeholder="例: 社内LT"
+                        className="name-input"
+                      />
+                  </div>
+                  
+                  <div className="editor-columns">
+                      <div className="editor-column">
+                          <h4>発表時間</h4>
+                          <div className="editor-time-row">
+                              <input type="number" value={pmPMin} onChange={(e) => setPmPMin(Math.max(0, parseInt(e.target.value)||0))} />分
+                              <input type="number" value={pmPSec} onChange={(e) => setPmPSec(Math.max(0, parseInt(e.target.value)||0))} />秒
+                          </div>
+                          <div className="editor-warn-row">
+                              <label>警告残り:</label>
+                              <input type="number" value={pmPWarn} onChange={(e) => setPmPWarn(Math.max(0, parseInt(e.target.value)||0))} />秒
+                          </div>
+                      </div>
+                      
+                      <div className="editor-column">
+                          <h4>質疑応答</h4>
+                          <div className="editor-time-row">
+                              <input type="number" value={pmQMin} onChange={(e) => setPmQMin(Math.max(0, parseInt(e.target.value)||0))} />分
+                              <input type="number" value={pmQSec} onChange={(e) => setPmQSec(Math.max(0, parseInt(e.target.value)||0))} />秒
+                          </div>
+                          <div className="editor-warn-row">
+                              <label>警告残り:</label>
+                              <input type="number" value={pmQWarn} onChange={(e) => setPmQWarn(Math.max(0, parseInt(e.target.value)||0))} />秒
+                          </div>
+                      </div>
+                  </div>
+                  
+                  <div className="editor-actions">
+                      <button onClick={handleSavePresetManager} className="save-btn">保存</button>
+                      <button onClick={resetPresetManagerForm} className="cancel-btn">クリア</button>
+                  </div>
+              </div>
+
+              <div className="preset-list">
+                  <h3>保存済みプリセット</h3>
+                  {presets.length === 0 && <p>プリセットがありません。</p>}
+                  <ul>
+                      {presets.map(p => (
+                          <li key={p.id} onClick={() => handleEditPreset(p)} className={editingPresetId === p.id ? "editing" : ""}>
+                              <span className="preset-name">{p.name}</span>
+                              <span className="preset-details">
+                                  発表: {p.pMin}分{p.pSec}秒 (警{p.pWarn}s) / 質疑: {p.qMin}分{p.qSec}秒 (警{p.qWarn}s)
+                              </span>
+                              <button className="delete-icon" onClick={(e) => handleDeletePreset(p.id, e)}>×</button>
+                          </li>
+                      ))}
+                  </ul>
+              </div>
+
+              <button onClick={handleBackToSetup} className="back-btn">設定画面に戻る</button>
+          </div>
+      );
+  }
+
   return (
     <div className="container">
       {view === "setup" ? (
         <div id="setup-view">
           <h1>発表時間管理</h1>
           
-          <div className="preset-container">
-              <h3>プリセット</h3>
+          <div className="preset-selection-area">
+              <h3>プリセットを選択</h3>
               <div className="preset-buttons">
                   {presets.map((preset) => (
-                      <div key={preset.id} className="preset-wrapper">
-                          <button onClick={() => handleApplyPreset(preset)} className="preset-btn">
-                              {preset.name}
-                          </button>
-                          <button 
-                            className="preset-delete-btn" 
-                            onClick={(e) => handleDeletePreset(preset.id, preset.name, e)}
-                            title="削除"
-                          >
-                            ×
-                          </button>
-                      </div>
+                      <button key={preset.id} onClick={() => handleApplyPreset(preset)} className="preset-btn">
+                          {preset.name}
+                      </button>
                   ))}
               </div>
+              <button onClick={handleOpenPresetManager} className="manage-presets-link">
+                  プリセットを管理・編集する
+              </button>
           </div>
 
           <div className="timer-setup-grid">
@@ -409,14 +514,9 @@ function App() {
             </div>
           </div>
           
-          <div className="action-buttons">
-            <button onClick={handleSavePreset} className="save-preset-btn">
-                現在の設定をプリセットとして保存
-            </button>
-            <button id="go-to-timer-view" onClick={handleGoToTimerView} className="start-btn">
-                タイマー表示へ
-            </button>
-          </div>
+          <button id="go-to-timer-view" onClick={handleGoToTimerView} className="start-btn">
+             タイマー開始
+          </button>
 
           <p id="setup-status-message">{statusMessage}</p>
         </div>
