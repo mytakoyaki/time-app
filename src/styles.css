@@ -185,10 +185,12 @@ button:disabled {
 /* Status Message - Floating or Small */
 #status-message {
     position: absolute;
-    bottom: 6vh;
-    font-size: 0.8rem;
-    color: #555;
+    bottom: 12vh; /* Moved up to avoid overlap with controls */
+    font-size: 1.5rem; /* Larger font size */
+    color: #aaa; /* Lighter color for better visibility */
     margin: 0;
+    font-weight: 500;
+    opacity: 0.8;
 }
 
 #go-to-setup-view {
