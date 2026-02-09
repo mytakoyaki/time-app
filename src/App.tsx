@@ -82,12 +82,11 @@ function App() {
   // --- Handlers ---
 
   const formatTime = (totalSeconds: number) => {
-    const isNegative = totalSeconds < 0;
+    // Overtime sign removed per user request
     const absSeconds = Math.abs(totalSeconds);
     const minutes = Math.floor(absSeconds / 60);
     const seconds = absSeconds % 60;
     return {
-      sign: isNegative ? "-" : "",
       minutes: String(minutes).padStart(2, "0"),
       seconds: String(seconds).padStart(2, "0"),
     };
@@ -128,7 +127,7 @@ function App() {
     setView("setup");
   };
 
-  const handleStartTimer = async () => {
+  const handleStartTimer = async (durationSecondsOverride?: number) => {
     if (isTimerRunning) return;
     
     if (currentStageIndex >= timerStages.length) {
@@ -136,12 +135,13 @@ function App() {
        return;
     }
 
+    const duration = durationSecondsOverride !== undefined ? durationSecondsOverride : currentRemainingSeconds;
     const currentStage = timerStages[currentStageIndex];
     setIsTimerRunning(true);
     setStatusMessage(`${currentStage.name}を開始しました。`);
 
     try {
-      await invoke("start_timer", { durationSeconds: currentRemainingSeconds });
+      await invoke("start_timer", { durationSeconds: duration });
     } catch (error) {
       console.error("Failed to start timer:", error);
       setStatusMessage(`エラー: ${error}`);
@@ -166,8 +166,6 @@ function App() {
       await invoke("reset_timer");
       // 現在のステージの初期値に戻す
       if (timerStages.length > 0 && currentStageIndex < timerStages.length) {
-        // ステージ0以外の場合のリセットはどうするか？
-        // シンプルに「現在のステージの初期値」に戻す
         const initialDuration = timerStages[currentStageIndex].duration;
         setCurrentRemainingSeconds(initialDuration);
       } else {
@@ -198,23 +196,19 @@ function App() {
             setStatusMessage(`次のステージ: ${timerStages[nextIndex].name}`);
         }
         
-        // TimerStagesのデータ自体は書き換えず、初期カウントダウン時間として処理する
-        // あるいはTimerStagesを更新して「本来の時間はこれ」と表示しつつ、
-        // スタート時間を短くするか。ここではスタート時間を短くするだけにする。
-        
         setCurrentStageIndex(nextIndex);
         setCurrentRemainingSeconds(nextDuration);
         
-        // 自動スタートはさせず、ユーザーに開始させる
+        // 即座に次のステージを開始
+        await handleStartTimer(nextDuration);
     } else {
         setStatusMessage("すべてのステージが終了しました！");
-        // 完了状態
         setCurrentStageIndex(nextIndex); // 範囲外インデックスにして完了扱いにする
     }
   };
 
   // --- Render ---
-  const { sign, minutes: displayMinutes, seconds: displaySeconds } = formatTime(currentRemainingSeconds);
+  const { minutes: displayMinutes, seconds: displaySeconds } = formatTime(currentRemainingSeconds);
   
   // Determine CSS classes
   const isOvertime = currentRemainingSeconds < 0;
@@ -314,14 +308,14 @@ function App() {
             {currentStageName}
           </div>
           <div className={timerClass}>
-            {sign}<span id="timer-minutes">{displayMinutes}</span>:
+            <span id="timer-minutes">{displayMinutes}</span>:
             <span id="timer-seconds">{displaySeconds}</span>
           </div>
 
           <div className="controls">
             {currentStageIndex < timerStages.length && (
                 <>
-                <button id="start-timer" onClick={handleStartTimer} disabled={isTimerRunning}>
+                <button id="start-timer" onClick={() => handleStartTimer()} disabled={isTimerRunning}>
                   {isTimerRunning ? "計測中" : "開始"}
                 </button>
                 <button id="stop-timer" onClick={handleStopTimer} disabled={!isTimerRunning}>
@@ -333,8 +327,7 @@ function App() {
                 </>
             )}
             
-            {/* 次のステージへ進む、または終了するボタン */}
-             <button id="next-stage" onClick={handleNextStage} disabled={isTimerRunning}>
+             <button id="next-stage" onClick={handleNextStage}>
                 {currentStageIndex < timerStages.length - 1 ? "次のステージへ" : "終了する"}
             </button>
           </div>
