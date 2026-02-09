@@ -594,9 +594,6 @@ function App() {
              <button id="next-stage" onClick={handleNextStage}>
                 {currentStageIndex < timerStages.length - 1 ? "次のステージへ" : "終了する"}
             </button>
-            <button id="go-to-setup-view" onClick={handleGoToSetupView}>
-              設定
-            </button>
           </div>
 
           <p id="status-message">{statusMessage}</p>
