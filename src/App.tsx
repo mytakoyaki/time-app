@@ -330,12 +330,12 @@ function App() {
              <button id="next-stage" onClick={handleNextStage}>
                 {currentStageIndex < timerStages.length - 1 ? "次のステージへ" : "終了する"}
             </button>
+            <button id="go-to-setup-view" onClick={handleGoToSetupView}>
+              設定
+            </button>
           </div>
 
           <p id="status-message">{statusMessage}</p>
-          <button id="go-to-setup-view" onClick={handleGoToSetupView} style={{marginTop: "2rem"}}>
-            設定に戻る
-          </button>
         </div>
       )}
     </div>
