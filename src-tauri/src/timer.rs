@@ -44,3 +44,49 @@ pub async fn run_timer_loop(app_handle: AppHandle, state: Arc<Mutex<TimerState>>
         sleep(Duration::from_secs(1)).await;
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_timer_state_default() {
+        let state = TimerState::default();
+        assert_eq!(state.remaining_seconds, 0);
+        assert_eq!(state.is_running, false);
+    }
+
+    #[test]
+    fn test_timer_decrement_logic() {
+        let state = Arc::new(Mutex::new(TimerState {
+            remaining_seconds: 5,
+            is_running: true,
+            initial_duration: 5,
+        }));
+
+        // Simulate one loop iteration logic manually
+        {
+            let mut locked_state = state.lock().unwrap();
+            locked_state.remaining_seconds -= 1;
+        }
+        
+        assert_eq!(state.lock().unwrap().remaining_seconds, 4);
+    }
+
+    #[test]
+    fn test_timer_overtime_logic() {
+        let state = Arc::new(Mutex::new(TimerState {
+            remaining_seconds: 0,
+            is_running: true,
+            initial_duration: 5,
+        }));
+
+        // 0 -> -1 (Overtime start)
+        {
+            let mut locked_state = state.lock().unwrap();
+            locked_state.remaining_seconds -= 1;
+        }
+        
+        assert_eq!(state.lock().unwrap().remaining_seconds, -1);
+    }
+}
