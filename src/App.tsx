@@ -9,6 +9,7 @@ interface TimerStage {
 }
 
 interface Preset {
+    id: string; // Add ID for easier management
     name: string;
     pMin: number;
     pSec: number;
@@ -18,11 +19,11 @@ interface Preset {
     qWarn: number;
 }
 
-const PRESETS: Preset[] = [
-    { name: "標準 (5分/3分)", pMin: 5, pSec: 0, qMin: 3, qSec: 0, pWarn: 60, qWarn: 30 },
-    { name: "短め (3分/2分)", pMin: 3, pSec: 0, qMin: 2, qSec: 0, pWarn: 30, qWarn: 30 },
-    { name: "長め (10分/5分)", pMin: 10, pSec: 0, qMin: 5, qSec: 0, pWarn: 120, qWarn: 60 },
-    { name: "LT (5分/なし)", pMin: 5, pSec: 0, qMin: 0, qSec: 0, pWarn: 60, qWarn: 0 },
+const DEFAULT_PRESETS: Preset[] = [
+    { id: "default", name: "標準 (5分/3分)", pMin: 5, pSec: 0, qMin: 3, qSec: 0, pWarn: 60, qWarn: 30 },
+    { id: "short", name: "短め (3分/2分)", pMin: 3, pSec: 0, qMin: 2, qSec: 0, pWarn: 30, qWarn: 30 },
+    { id: "long", name: "長め (10分/5分)", pMin: 10, pSec: 0, qMin: 5, qSec: 0, pWarn: 120, qWarn: 60 },
+    { id: "lt", name: "LT (5分/なし)", pMin: 5, pSec: 0, qMin: 0, qSec: 0, pWarn: 60, qWarn: 0 },
 ];
 
 function App() {
@@ -41,6 +42,9 @@ function App() {
   
   // Settings
   const [deductOvertime, setDeductOvertime] = useState(true);
+  
+  // Presets
+  const [presets, setPresets] = useState<Preset[]>(DEFAULT_PRESETS);
 
   // Timer Logic
   const [timerStages, setTimerStages] = useState<TimerStage[]>([]);
@@ -49,11 +53,25 @@ function App() {
   const [currentRemainingSeconds, setCurrentRemainingSeconds] = useState(0);
   const [statusMessage, setStatusMessage] = useState("");
 
-  // Refs for accessing latest state in event listeners/callbacks
+  // Refs
   const timerStagesRef = useRef<TimerStage[]>([]);
   const currentStageIndexRef = useRef(0);
   const currentRemainingSecondsRef = useRef(0);
   const isTimerRunningRef = useRef(false);
+
+  // --- Effects ---
+
+  // Load presets from localStorage on mount
+  useEffect(() => {
+    const savedPresets = localStorage.getItem("timer_presets");
+    if (savedPresets) {
+        try {
+            setPresets(JSON.parse(savedPresets));
+        } catch (e) {
+            console.error("Failed to parse saved presets", e);
+        }
+    }
+  }, []);
 
   // Sync refs with state
   useEffect(() => {
@@ -73,7 +91,7 @@ function App() {
   }, [currentRemainingSeconds]);
 
 
-  // --- Event Listeners ---
+  // Event Listeners
   useEffect(() => {
     let unlistenUpdate: (() => void) | undefined;
     let unlistenFinished: (() => void) | undefined;
@@ -84,7 +102,7 @@ function App() {
       });
       
       unlistenFinished = await listen("timer-finished", async () => {
-         // 必要なら通知音
+         // Notification sound logic here if needed
       });
     };
 
@@ -106,6 +124,37 @@ function App() {
       setQaSeconds(preset.qSec);
       setQaWarningSeconds(preset.qWarn);
       setStatusMessage(`プリセット「${preset.name}」を適用しました。`);
+  };
+  
+  const handleSavePreset = () => {
+      const name = window.prompt("新しいプリセットの名前を入力してください:", "カスタム設定");
+      if (!name) return;
+      
+      const newPreset: Preset = {
+          id: Date.now().toString(),
+          name,
+          pMin: presentationMinutes,
+          pSec: presentationSeconds,
+          qMin: qaMinutes,
+          qSec: qaSeconds,
+          pWarn: presentationWarningSeconds,
+          qWarn: qaWarningSeconds
+      };
+      
+      const newPresets = [...presets, newPreset];
+      setPresets(newPresets);
+      localStorage.setItem("timer_presets", JSON.stringify(newPresets));
+      setStatusMessage(`プリセット「${name}」を保存しました。`);
+  };
+  
+  const handleDeletePreset = (id: string, name: string, e: React.MouseEvent) => {
+      e.stopPropagation(); // Prevent applying the preset when clicking delete
+      if (!window.confirm(`プリセット「${name}」を削除してもよろしいですか？`)) return;
+      
+      const newPresets = presets.filter(p => p.id !== id);
+      setPresets(newPresets);
+      localStorage.setItem("timer_presets", JSON.stringify(newPresets));
+      setStatusMessage(`プリセット「${name}」を削除しました。`);
   };
 
   const formatTime = (totalSeconds: number) => {
@@ -255,12 +304,24 @@ function App() {
         <div id="setup-view">
           <h1>発表時間管理</h1>
           
-          <div className="preset-buttons">
-              {PRESETS.map((preset) => (
-                  <button key={preset.name} onClick={() => handleApplyPreset(preset)} className="preset-btn">
-                      {preset.name}
-                  </button>
-              ))}
+          <div className="preset-container">
+              <h3>プリセット</h3>
+              <div className="preset-buttons">
+                  {presets.map((preset) => (
+                      <div key={preset.id} className="preset-wrapper">
+                          <button onClick={() => handleApplyPreset(preset)} className="preset-btn">
+                              {preset.name}
+                          </button>
+                          <button 
+                            className="preset-delete-btn" 
+                            onClick={(e) => handleDeletePreset(preset.id, preset.name, e)}
+                            title="削除"
+                          >
+                            ×
+                          </button>
+                      </div>
+                  ))}
+              </div>
           </div>
 
           <div className="timer-setup-grid">
@@ -347,10 +408,16 @@ function App() {
                 <label htmlFor="deduct-overtime" style={{cursor: "pointer"}}>発表の超過分を質疑応答から引く</label>
             </div>
           </div>
+          
+          <div className="action-buttons">
+            <button onClick={handleSavePreset} className="save-preset-btn">
+                現在の設定をプリセットとして保存
+            </button>
+            <button id="go-to-timer-view" onClick={handleGoToTimerView} className="start-btn">
+                タイマー表示へ
+            </button>
+          </div>
 
-          <button id="go-to-timer-view" onClick={handleGoToTimerView} className="start-btn">
-            タイマー表示へ
-          </button>
           <p id="setup-status-message">{statusMessage}</p>
         </div>
       ) : (

@@ -43,39 +43,82 @@ body {
   align-items: center;
   height: 100%;
   width: 100%;
+  gap: 1.5rem; /* Gap between sections */
 }
 
 h1 {
   text-align: center;
-  margin-bottom: 2rem;
-  font-size: 3rem; /* Increased size */
+  margin: 0;
+  font-size: 3rem; 
+}
+
+.preset-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.preset-container h3 {
+    margin: 0 0 0.5rem 0;
+    color: #888;
+    font-size: 1.2rem;
 }
 
 .preset-buttons {
     display: flex;
     gap: 1rem;
-    margin-bottom: 3rem;
     flex-wrap: wrap;
     justify-content: center;
+    max-width: 80%;
+}
+
+.preset-wrapper {
+    display: flex;
+    align-items: center;
+    background-color: #333;
+    border: 1px solid #555;
+    border-radius: 6px;
+    padding: 0;
+    overflow: hidden;
 }
 
 .preset-btn {
-    background-color: #333;
-    border: 1px solid #555;
+    background: transparent;
+    border: none;
     font-size: 1rem;
-    padding: 0.6em 1.2em;
+    padding: 0.6em 1em;
+    color: #eee;
+    cursor: pointer;
+    border-right: 1px solid #555;
+    border-radius: 0;
 }
 
 .preset-btn:hover {
     background-color: #444;
-    border-color: #888;
+}
+
+.preset-delete-btn {
+    background: transparent;
+    border: none;
+    color: #888;
+    font-size: 1.2rem;
+    padding: 0 0.5em;
+    cursor: pointer;
+    line-height: 1;
+    border-radius: 0;
+}
+
+.preset-delete-btn:hover {
+    background-color: #500;
+    color: white;
 }
 
 .timer-setup-grid {
     display: flex;
     justify-content: center;
     gap: 4rem;
-    margin-bottom: 3rem;
+    margin: 0;
 }
 
 .timer-setup-group {
@@ -98,7 +141,7 @@ h1 {
 
 .timer-setup label {
     font-weight: bold;
-    font-size: 1.8rem; /* Increased size */
+    font-size: 1.8rem;
     color: #ddd;
 }
 
@@ -111,7 +154,7 @@ h1 {
 .timer-setup input {
     width: 100px;
     padding: 0.5rem;
-    font-size: 2.2rem; /* Increased size */
+    font-size: 2.2rem;
     text-align: center;
     background: #1a1a1a;
     color: white;
@@ -120,7 +163,7 @@ h1 {
 }
 
 .timer-setup span {
-    font-size: 1.5rem; /* Increased size */
+    font-size: 1.5rem;
     margin-left: 0.2rem;
     color: #888;
 }
@@ -148,14 +191,12 @@ h1 {
     font-size: 1rem;
 }
 
-
 .timer-options {
-  margin-bottom: 3rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1rem;
-  font-size: 1.5rem; /* Increased size */
+  font-size: 1.5rem;
 }
 
 .timer-option-row {
@@ -164,11 +205,32 @@ h1 {
   gap: 0.8rem;
 }
 
+.action-buttons {
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+}
+
+.save-preset-btn {
+    font-size: 1rem;
+    padding: 0.8em 1.5em;
+    background-color: #1a1a1a;
+    border: 1px dashed #666;
+    color: #aaa;
+}
+
+.save-preset-btn:hover {
+    background-color: #2a2a2a;
+    border-color: #aaa;
+    color: white;
+}
+
 .start-btn {
     font-size: 2rem;
     padding: 0.8em 2em;
     background-color: #2a2a2a;
     border-color: #555;
+    font-weight: bold;
 }
 
 .start-btn:hover {
@@ -202,7 +264,6 @@ h1 {
     justify-content: center;
     align-items: center;
     
-    /* Massive Font Size - Adjusted to 35vw to avoid overflow */
     font-size: 35vw; 
     font-family: 'Courier New', Courier, monospace;
     font-weight: 700;
@@ -211,7 +272,6 @@ h1 {
     font-variant-numeric: tabular-nums;
     color: #ffffff;
     
-    /* Ensure it doesn't break layout */
     margin: 0;
     padding: 0;
     width: 100%;
@@ -243,7 +303,7 @@ button {
   border-radius: 6px;
   border: 1px solid #333;
   padding: 0.4em 1em;
-  font-size: 1rem; /* Smaller buttons for controls */
+  font-size: 1rem; 
   font-weight: 500;
   font-family: inherit;
   background-color: #111;
@@ -267,8 +327,8 @@ button:disabled {
 #status-message {
     position: absolute;
     bottom: 12vh; /* Moved up to avoid overlap with controls */
-    font-size: 1.5rem; /* Larger font size */
-    color: #aaa; /* Lighter color for better visibility */
+    font-size: 1.5rem; 
+    color: #aaa; 
     margin: 0;
     font-weight: 500;
     opacity: 0.8;
