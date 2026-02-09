@@ -5,7 +5,25 @@ import { listen } from "@tauri-apps/api/event";
 interface TimerStage {
   name: string;
   duration: number; // in seconds
+  warningThreshold: number; // in seconds
 }
+
+interface Preset {
+    name: string;
+    pMin: number;
+    pSec: number;
+    qMin: number;
+    qSec: number;
+    pWarn: number;
+    qWarn: number;
+}
+
+const PRESETS: Preset[] = [
+    { name: "標準 (5分/3分)", pMin: 5, pSec: 0, qMin: 3, qSec: 0, pWarn: 60, qWarn: 30 },
+    { name: "短め (3分/2分)", pMin: 3, pSec: 0, qMin: 2, qSec: 0, pWarn: 30, qWarn: 30 },
+    { name: "長め (10分/5分)", pMin: 10, pSec: 0, qMin: 5, qSec: 0, pWarn: 120, qWarn: 60 },
+    { name: "LT (5分/なし)", pMin: 5, pSec: 0, qMin: 0, qSec: 0, pWarn: 60, qWarn: 0 },
+];
 
 function App() {
   // --- State ---
@@ -15,11 +33,13 @@ function App() {
   // Inputs
   const [presentationMinutes, setPresentationMinutes] = useState(5);
   const [presentationSeconds, setPresentationSeconds] = useState(0);
+  const [presentationWarningSeconds, setPresentationWarningSeconds] = useState(60);
+
   const [qaMinutes, setQaMinutes] = useState(3);
   const [qaSeconds, setQaSeconds] = useState(0);
+  const [qaWarningSeconds, setQaWarningSeconds] = useState(30);
   
-  // New Settings
-  const [warningSeconds, setWarningSeconds] = useState(60); // Default 1 minute
+  // Settings
   const [deductOvertime, setDeductOvertime] = useState(true);
 
   // Timer Logic
@@ -63,11 +83,8 @@ function App() {
         setCurrentRemainingSeconds(event.payload);
       });
       
-      // 今回の要件変更により、0になっても停止しないため、timer-finishedでの自動停止は行わない。
-      // ただし、0になった瞬間の通知として利用可能。
       unlistenFinished = await listen("timer-finished", async () => {
-         // 必要ならここで通知音などを鳴らす
-         setStatusMessage("時間経過！超過時間を計測中...");
+         // 必要なら通知音
       });
     };
 
@@ -81,8 +98,17 @@ function App() {
 
   // --- Handlers ---
 
+  const handleApplyPreset = (preset: Preset) => {
+      setPresentationMinutes(preset.pMin);
+      setPresentationSeconds(preset.pSec);
+      setPresentationWarningSeconds(preset.pWarn);
+      setQaMinutes(preset.qMin);
+      setQaSeconds(preset.qSec);
+      setQaWarningSeconds(preset.qWarn);
+      setStatusMessage(`プリセット「${preset.name}」を適用しました。`);
+  };
+
   const formatTime = (totalSeconds: number) => {
-    // Overtime sign removed per user request
     const absSeconds = Math.abs(totalSeconds);
     const minutes = Math.floor(absSeconds / 60);
     const seconds = absSeconds % 60;
@@ -97,10 +123,14 @@ function App() {
     const qSec = qaMinutes * 60 + qaSeconds;
     
     // ステージを構築
-    const stages: TimerStage[] = [
-      { name: "発表", duration: pSec },
-      { name: "質疑応答", duration: qSec },
-    ].filter(s => s.duration > 0);
+    const stages: TimerStage[] = [];
+    
+    if (pSec > 0) {
+        stages.push({ name: "発表", duration: pSec, warningThreshold: presentationWarningSeconds });
+    }
+    if (qSec > 0) {
+        stages.push({ name: "質疑応答", duration: qSec, warningThreshold: qaWarningSeconds });
+    }
 
     if (stages.length === 0) {
       setStatusMessage("タイマーを設定してください。");
@@ -164,7 +194,6 @@ function App() {
   const handleResetTimer = async () => {
     try {
       await invoke("reset_timer");
-      // 現在のステージの初期値に戻す
       if (timerStages.length > 0 && currentStageIndex < timerStages.length) {
         const initialDuration = timerStages[currentStageIndex].duration;
         setCurrentRemainingSeconds(initialDuration);
@@ -180,14 +209,12 @@ function App() {
   };
   
   const handleNextStage = async () => {
-    // まず現在のタイマーを止める
     await handleStopTimer();
     
     const nextIndex = currentStageIndex + 1;
     if (nextIndex < timerStages.length) {
         let nextDuration = timerStages[nextIndex].duration;
         
-        // 超過分の精算ロジック
         if (deductOvertime && currentRemainingSeconds < 0) {
             const overtime = Math.abs(currentRemainingSeconds);
             nextDuration = Math.max(0, nextDuration - overtime);
@@ -199,11 +226,10 @@ function App() {
         setCurrentStageIndex(nextIndex);
         setCurrentRemainingSeconds(nextDuration);
         
-        // 即座に次のステージを開始
         await handleStartTimer(nextDuration);
     } else {
         setStatusMessage("すべてのステージが終了しました！");
-        setCurrentStageIndex(nextIndex); // 範囲外インデックスにして完了扱いにする
+        setCurrentStageIndex(nextIndex);
     }
   };
 
@@ -211,93 +237,118 @@ function App() {
   const { minutes: displayMinutes, seconds: displaySeconds } = formatTime(currentRemainingSeconds);
   
   // Determine CSS classes
+  const currentStage = timerStages[currentStageIndex];
   const isOvertime = currentRemainingSeconds < 0;
-  const isWarning = !isOvertime && currentRemainingSeconds <= warningSeconds && currentRemainingSeconds > 0;
+  // Use stage-specific warning threshold
+  const threshold = currentStage?.warningThreshold || 60;
+  const isWarning = !isOvertime && currentRemainingSeconds <= threshold && currentRemainingSeconds > 0;
   
   let timerClass = "timer-display";
   if (isOvertime) timerClass += " overtime";
   else if (isWarning) timerClass += " warning";
 
-  const currentStageName = timerStages[currentStageIndex]?.name || (currentStageIndex >= timerStages.length ? "完了" : "準備中");
+  const currentStageName = currentStage?.name || (currentStageIndex >= timerStages.length ? "完了" : "準備中");
 
   return (
     <div className="container">
       {view === "setup" ? (
         <div id="setup-view">
-          <h1>発表時間管理 - 設定</h1>
+          <h1>発表時間管理</h1>
+          
+          <div className="preset-buttons">
+              {PRESETS.map((preset) => (
+                  <button key={preset.name} onClick={() => handleApplyPreset(preset)} className="preset-btn">
+                      {preset.name}
+                  </button>
+              ))}
+          </div>
+
           <div className="timer-setup-grid">
-            <div className="timer-setup">
-              <label htmlFor="minutes-presentation">発表時間:</label>
-              <div>
-                <input
-                    type="number"
-                    id="minutes-presentation"
-                    value={presentationMinutes}
-                    onChange={(e) => setPresentationMinutes(Math.max(0, parseInt(e.target.value) || 0))}
-                    min="0"
-                    max="99"
-                />
-                <span>分</span>
-                <input
-                    type="number"
-                    id="seconds-presentation"
-                    value={presentationSeconds}
-                    onChange={(e) => setPresentationSeconds(Math.max(0, Math.min(59, parseInt(e.target.value) || 0)))}
-                    min="0"
-                    max="59"
-                />
-                <span>秒</span>
-              </div>
+            <div className="timer-setup-group">
+                <div className="timer-setup">
+                  <label htmlFor="minutes-presentation">発表時間</label>
+                  <div className="time-input-row">
+                    <input
+                        type="number"
+                        id="minutes-presentation"
+                        value={presentationMinutes}
+                        onChange={(e) => setPresentationMinutes(Math.max(0, parseInt(e.target.value) || 0))}
+                        min="0"
+                        max="99"
+                    />
+                    <span>分</span>
+                    <input
+                        type="number"
+                        id="seconds-presentation"
+                        value={presentationSeconds}
+                        onChange={(e) => setPresentationSeconds(Math.max(0, Math.min(59, parseInt(e.target.value) || 0)))}
+                        min="0"
+                        max="59"
+                    />
+                    <span>秒</span>
+                  </div>
+                </div>
+                <div className="warning-setup">
+                    <label>警告開始 (残り):</label>
+                    <input
+                        type="number"
+                        value={presentationWarningSeconds}
+                        onChange={(e) => setPresentationWarningSeconds(Math.max(0, parseInt(e.target.value) || 0))}
+                    />
+                    <span>秒</span>
+                </div>
             </div>
-            <div className="timer-setup">
-              <label htmlFor="minutes-qa">質疑応答:</label>
-              <div>
-                <input
-                    type="number"
-                    id="minutes-qa"
-                    value={qaMinutes}
-                    onChange={(e) => setQaMinutes(Math.max(0, parseInt(e.target.value) || 0))}
-                    min="0"
-                    max="99"
-                />
-                <span>分</span>
-                <input
-                    type="number"
-                    id="seconds-qa"
-                    value={qaSeconds}
-                    onChange={(e) => setQaSeconds(Math.max(0, Math.min(59, parseInt(e.target.value) || 0)))}
-                    min="0"
-                    max="59"
-                />
-                <span>秒</span>
-              </div>
+
+            <div className="timer-setup-group">
+                <div className="timer-setup">
+                  <label htmlFor="minutes-qa">質疑応答</label>
+                  <div className="time-input-row">
+                    <input
+                        type="number"
+                        id="minutes-qa"
+                        value={qaMinutes}
+                        onChange={(e) => setQaMinutes(Math.max(0, parseInt(e.target.value) || 0))}
+                        min="0"
+                        max="99"
+                    />
+                    <span>分</span>
+                    <input
+                        type="number"
+                        id="seconds-qa"
+                        value={qaSeconds}
+                        onChange={(e) => setQaSeconds(Math.max(0, Math.min(59, parseInt(e.target.value) || 0)))}
+                        min="0"
+                        max="59"
+                    />
+                    <span>秒</span>
+                  </div>
+                </div>
+                <div className="warning-setup">
+                    <label>警告開始 (残り):</label>
+                    <input
+                        type="number"
+                        value={qaWarningSeconds}
+                        onChange={(e) => setQaWarningSeconds(Math.max(0, parseInt(e.target.value) || 0))}
+                    />
+                    <span>秒</span>
+                </div>
             </div>
           </div>
           
           <div className="timer-options">
-            <div className="timer-option-row">
-                <label htmlFor="warning-seconds">警告開始 (残り時間):</label>
-                <input 
-                    type="number" 
-                    id="warning-seconds"
-                    value={warningSeconds}
-                    onChange={(e) => setWarningSeconds(Math.max(0, parseInt(e.target.value) || 0))}
-                    style={{width: "50px", textAlign: "center"}}
-                />
-                <span>秒</span>
-            </div>
             <div className="timer-option-row">
                 <input 
                     type="checkbox" 
                     id="deduct-overtime"
                     checked={deductOvertime}
                     onChange={(e) => setDeductOvertime(e.target.checked)}
+                    style={{width: "20px", height: "20px"}} 
                 />
-                <label htmlFor="deduct-overtime">発表の超過分を質疑応答から引く</label>
+                <label htmlFor="deduct-overtime" style={{cursor: "pointer"}}>発表の超過分を質疑応答から引く</label>
             </div>
           </div>
 
-          <button id="go-to-timer-view" onClick={handleGoToTimerView}>
+          <button id="go-to-timer-view" onClick={handleGoToTimerView} className="start-btn">
             タイマー表示へ
           </button>
           <p id="setup-status-message">{statusMessage}</p>
