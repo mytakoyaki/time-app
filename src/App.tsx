@@ -345,8 +345,9 @@ function App() {
         
         await handleStartTimer(nextDuration);
     } else {
+        // All stages finished, return to setup view
+        await handleGoToSetupView();
         setStatusMessage("すべてのステージが終了しました！");
-        setCurrentStageIndex(nextIndex);
     }
   };
 
