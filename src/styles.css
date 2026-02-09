@@ -5,7 +5,7 @@
   font-weight: 400;
 
   color-scheme: light dark;
-  color: #ffffffde;
+  color: rgba(255, 255, 255, 0.87);
   background-color: #242424;
 
   font-synthesis: none;
@@ -15,153 +15,133 @@
   -webkit-text-size-adjust: 100%;
 }
 
-body {
-  margin: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
 .container {
   margin: 0;
-  padding: 20px;
+  padding-top: 10vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
   text-align: center;
-  background-color: #333;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  width: 100%;
-  max-width: 500px; /* 設定ビューの最大幅 */
 }
-
-/* タイマー表示画面用のスタイル */
-#timer-view.container {
-  max-width: none; /* 最大幅の制限を解除 */
-  min-height: 100vh; /* 縦いっぱいに広がる */
-  width: 100%; /* 横いっぱいに広がる */
-  border-radius: 0; /* 角丸をなくす */
-  justify-content: center; /* 子要素を縦方向の中央に配置 */
-  align-items: center; /* 子要素を横方向の中央に配置 */
-  padding: 5vh 20px; /* 上下のパディングを少し増やす */
-  gap: 20px; /* 子要素間のデフォルトのギャップ */
-}
-
 
 h1 {
-  font-size: 2.2em;
-  line-height: 1.1;
-  color: #4caf50;
-  margin-bottom: 20px;
-}
-
-.timer-setup-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 15px;
-  margin-bottom: 20px;
-}
-
-.timer-setup {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-  align-items: center;
-}
-
-.stage-label {
-  font-size: 1.8em; /* 少し大きく */
-  color: #ffc107;
-  margin-bottom: 0; /* 親のgapで調整 */
-  min-height: 1.5em;
-  flex-shrink: 0; /* 縮まないように */
-}
-
-.timer-setup input {
-  width: 60px;
-  padding: 8px;
-  border: 1px solid #555;
-  border-radius: 4px;
-  background-color: #444;
-  color: #fff;
   text-align: center;
 }
 
-.timer-display {
-  font-size: clamp(5rem, 35vw, 65vh); /* 画面幅・高さに応じたサイズ */
-  line-height: 1; /* 数字の行間を詰める */
-  margin: auto; /* 残りのスペースを自動で埋め、数字を中央に寄せる */
-  color: #eee;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-  flex-grow: 1;
+.timer-setup-grid {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.timer-setup {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.timer-setup label {
+    font-weight: bold;
+}
+
+.timer-setup input {
+    width: 60px;
+    padding: 0.5rem;
+    font-size: 1.2rem;
+    text-align: center;
+}
+
+.timer-options {
+  margin-top: 1rem;
+  margin-bottom: 2rem;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
+  gap: 0.5rem;
+}
+
+.timer-option-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.stage-label {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    font-weight: bold;
+    color: #646cff;
+}
+
+.timer-display {
+    font-size: 8rem;
+    font-family: monospace;
+    margin: 2rem 0;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+.timer-display.warning {
+    color: #fca311; /* Yellow/Orange */
+}
+
+.timer-display.overtime {
+    color: #ef233c; /* Red */
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.8; }
+    100% { opacity: 1; }
 }
 
 .controls {
-  display: flex;
-  gap: 15px;
-  justify-content: center;
-  margin-top: 0; /* 親のgapで調整 */
-  flex-shrink: 0;
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
 }
 
 button {
   border-radius: 8px;
   border: 1px solid transparent;
-  padding: 0.5em 1em; /* ボタンを小さく */
-  font-size: 1em; /* フォントも小さく */
+  padding: 0.6em 1.2em;
+  font-size: 1em;
   font-weight: 500;
   font-family: inherit;
   background-color: #1a1a1a;
   cursor: pointer;
   transition: border-color 0.25s;
-  color: #fff;
 }
 
 button:hover {
   border-color: #646cff;
 }
-
-button#start-timer {
-  background-color: #4caf50;
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
 }
 
-button#start-timer:hover {
-  background-color: #66bb6a;
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
-button#stop-timer {
-  background-color: #f44336;
+#status-message, #setup-status-message {
+    margin-top: 1rem;
+    min-height: 1.5rem; 
+    color: #888;
 }
 
-button#stop-timer:hover {
-  background-color: #ef5350;
-}
-
-button#reset-timer {
-  background-color: #2196f3;
-}
-
-button#reset-timer:hover {
-  background-color: #42a5f5;
-}
-
-button#set-timer {
-  background-color: #ffc107;
-  color: #333;
-}
-button#set-timer:hover {
-  background-color: #ffca28;
-}
-
-#status-message {
-  margin-top: 30px; /* 余白を増やす */
-  font-size: 1.2em; /* 少し大きく */
-  color: #ccc;
-  min-height: 1.2em;
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+  button {
+    background-color: #f9f9f9;
+  }
 }
