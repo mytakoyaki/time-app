@@ -48,11 +48,13 @@ body { margin: 0; overflow-x: hidden; width: 100vw; height: 100vh; }
 }
 .time-inputs span { color: #888; font-size: 1.4rem; font-weight: bold; }
 
-.warning-input { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.2rem; font-size: 0.9rem; color: #fca311; }
+.warning-input { display: flex; align-items: center; gap: 0.6rem; margin-top: 0.5rem; font-size: 1.2rem; color: #fca311; font-weight: 500; }
 .warning-input input {
-    width: 50px; background: transparent; border: none; border-bottom: 1px solid #fca311;
-    color: #fca311; text-align: center; font-size: 1.1rem;
+    width: 70px; background: transparent; border: none; border-bottom: 2px solid #fca311;
+    color: #fca311; text-align: center; font-size: 1.8rem; font-weight: bold;
+    outline: none;
 }
+.warning-input input:focus { border-bottom-color: #fff; }
 
 .action-area { display: flex; gap: 1.5rem; justify-content: center; margin-top: 0.5rem; }
 .primary-start-btn {
