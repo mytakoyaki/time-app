@@ -16,7 +16,7 @@ interface SetupViewProps {
   setDeductOvertime: (val: boolean) => void;
   statusMessage?: string;
   isMirrorOpen: boolean;
-  onToggleMirror: () => void;
+  onStartWithMirror: (stages: TimerStage[]) => void;
 }
 
 export function SetupView({
@@ -33,9 +33,8 @@ export function SetupView({
   setDeductOvertime,
   statusMessage,
   isMirrorOpen,
-  onToggleMirror
+  onStartWithMirror
 }: SetupViewProps) {
-  // Local Inputs
   const [presentationMinutes, setPresentationMinutes] = useState(5);
   const [presentationSeconds, setPresentationSeconds] = useState(0);
   const [presentationWarningSeconds, setPresentationWarningSeconds] = useState(60);
@@ -47,7 +46,6 @@ export function SetupView({
   const [localStatusMessage, setLocalStatusMessage] = useState("");
   const [monitors, setMonitors] = useState<Monitor[]>([]);
 
-  // 接続されているモニターを取得
   useEffect(() => {
     const fetchMonitors = async () => {
         try {
@@ -60,6 +58,31 @@ export function SetupView({
     fetchMonitors();
   }, []);
 
+  const getStages = (): TimerStage[] | null => {
+    const pSec = presentationMinutes * 60 + presentationSeconds;
+    const qSec = qaMinutes * 60 + qaSeconds;
+    const stages: TimerStage[] = [];
+    
+    if (pSec > 0) stages.push({ name: "発表", duration: pSec, warningThreshold: presentationWarningSeconds });
+    if (qSec > 0) stages.push({ name: "質疑応答", duration: qSec, warningThreshold: qaWarningSeconds });
+
+    if (stages.length === 0) {
+      setLocalStatusMessage("タイマーを設定してください。");
+      return null;
+    }
+    return stages;
+  };
+
+  const handleStartNormal = () => {
+    const stages = getStages();
+    if (stages) onStartTimer(stages);
+  };
+
+  const handleStartMirror = () => {
+    const stages = getStages();
+    if (stages) onStartWithMirror(stages);
+  };
+
   const handleApplyPreset = (preset: Preset) => {
       setPresentationMinutes(preset.pMin);
       setPresentationSeconds(preset.pSec);
@@ -68,27 +91,6 @@ export function SetupView({
       setQaSeconds(preset.qSec);
       setQaWarningSeconds(preset.qWarn);
       setLocalStatusMessage(`プリセット「${preset.name}」を適用しました。`);
-  };
-
-  const handleGoToTimerView = () => {
-    const pSec = presentationMinutes * 60 + presentationSeconds;
-    const qSec = qaMinutes * 60 + qaSeconds;
-    
-    const stages: TimerStage[] = [];
-    
-    if (pSec > 0) {
-        stages.push({ name: "発表", duration: pSec, warningThreshold: presentationWarningSeconds });
-    }
-    if (qSec > 0) {
-        stages.push({ name: "質疑応答", duration: qSec, warningThreshold: qaWarningSeconds });
-    }
-
-    if (stages.length === 0) {
-      setLocalStatusMessage("タイマーを設定してください。");
-      return;
-    }
-
-    onStartTimer(stages);
   };
 
   return (
@@ -114,33 +116,15 @@ export function SetupView({
             <div className="timer-setup">
               <label htmlFor="minutes-presentation">発表時間</label>
               <div className="time-input-row">
-                <input
-                    type="number"
-                    id="minutes-presentation"
-                    value={presentationMinutes}
-                    onChange={(e) => setPresentationMinutes(Math.max(0, parseInt(e.target.value) || 0))}
-                    min="0"
-                    max="99"
-                />
+                <input type="number" id="minutes-presentation" value={presentationMinutes} onChange={(e) => setPresentationMinutes(Math.max(0, parseInt(e.target.value) || 0))} min="0" />
                 <span>分</span>
-                <input
-                    type="number"
-                    id="seconds-presentation"
-                    value={presentationSeconds}
-                    onChange={(e) => setPresentationSeconds(Math.max(0, Math.min(59, parseInt(e.target.value) || 0)))}
-                    min="0"
-                    max="59"
-                />
+                <input type="number" id="seconds-presentation" value={presentationSeconds} onChange={(e) => setPresentationSeconds(Math.max(0, Math.min(59, parseInt(e.target.value) || 0)))} min="0" />
                 <span>秒</span>
               </div>
             </div>
             <div className="warning-setup">
                 <label>警告開始 (残り):</label>
-                <input
-                    type="number"
-                    value={presentationWarningSeconds}
-                    onChange={(e) => setPresentationWarningSeconds(Math.max(0, parseInt(e.target.value) || 0))}
-                />
+                <input type="number" value={presentationWarningSeconds} onChange={(e) => setPresentationWarningSeconds(Math.max(0, parseInt(e.target.value) || 0))} />
                 <span>秒</span>
             </div>
         </div>
@@ -149,33 +133,15 @@ export function SetupView({
             <div className="timer-setup">
               <label htmlFor="minutes-qa">質疑応答</label>
               <div className="time-input-row">
-                <input
-                    type="number"
-                    id="minutes-qa"
-                    value={qaMinutes}
-                    onChange={(e) => setQaMinutes(Math.max(0, parseInt(e.target.value) || 0))}
-                    min="0"
-                    max="99"
-                />
+                <input type="number" id="minutes-qa" value={qaMinutes} onChange={(e) => setQaMinutes(Math.max(0, parseInt(e.target.value) || 0))} min="0" />
                 <span>分</span>
-                <input
-                    type="number"
-                    id="seconds-qa"
-                    value={qaSeconds}
-                    onChange={(e) => setQaSeconds(Math.max(0, Math.min(59, parseInt(e.target.value) || 0)))}
-                    min="0"
-                    max="59"
-                />
+                <input type="number" id="seconds-qa" value={qaSeconds} onChange={(e) => setQaSeconds(Math.max(0, Math.min(59, parseInt(e.target.value) || 0)))} min="0" />
                 <span>秒</span>
               </div>
             </div>
             <div className="warning-setup">
                 <label>警告開始 (残り):</label>
-                <input
-                    type="number"
-                    value={qaWarningSeconds}
-                    onChange={(e) => setQaWarningSeconds(Math.max(0, parseInt(e.target.value) || 0))}
-                />
+                <input type="number" value={qaWarningSeconds} onChange={(e) => setQaWarningSeconds(Math.max(0, parseInt(e.target.value) || 0))} />
                 <span>秒</span>
             </div>
         </div>
@@ -184,21 +150,10 @@ export function SetupView({
       <div className="timer-options">
         <div className="timer-option-row">
             <label>通知音:</label>
-            <input 
-                type="checkbox" 
-                id="enable-sound"
-                checked={enableSound}
-                onChange={(e) => onToggleSound(e.target.checked)}
-                style={{width: "20px", height: "20px"}} 
-            />
-            <select 
-                value={selectedSoundType} 
-                onChange={(e) => onSoundTypeChange(e.target.value as SoundType)}
-                disabled={!enableSound}
-                className="select-input"
-            >
-                <option value="standard">標準 (サイン波)</option>
-                <option value="electronic">電子音 (矩形波)</option>
+            <input type="checkbox" id="enable-sound" checked={enableSound} onChange={(e) => onToggleSound(e.target.checked)} style={{width: "20px", height: "20px"}} />
+            <select value={selectedSoundType} onChange={(e) => onSoundTypeChange(e.target.value as SoundType)} disabled={!enableSound} className="select-input">
+                <option value="standard">標準</option>
+                <option value="electronic">電子音</option>
                 <option value="bell">ベル風</option>
                 <option value="chime">チャイム風</option>
             </select>
@@ -206,41 +161,28 @@ export function SetupView({
 
         <div className="timer-option-row">
             <label>出力先ディスプレイ:</label>
-            <select 
-                value={displaySettings.targetMonitorName || ""} 
-                onChange={(e) => onDisplaySettingsChange({ targetMonitorName: e.target.value || null })}
-                className="select-input"
-            >
+            <select value={displaySettings.targetMonitorName || ""} onChange={(e) => onDisplaySettingsChange({ targetMonitorName: e.target.value || null })} className="select-input">
                 <option value="">自動 (2枚目を優先)</option>
                 {monitors.map((m, i) => (
-                    <option key={i} value={m.name || ""}>
-                        {m.name || `Display ${i+1}`} ({m.size.width}x{m.size.height})
-                    </option>
+                    <option key={i} value={m.name || ""}>{m.name || `Display ${i+1}`} ({m.size.width}x{m.size.height})</option>
                 ))}
             </select>
-            <button 
-                onClick={onToggleMirror}
-                className={isMirrorOpen ? "mirror-active-btn" : "mirror-btn"}
-            >
-                {isMirrorOpen ? "停止" : "2画面表示を開始"}
-            </button>
         </div>
 
         <div className="timer-option-row">
-            <input 
-                type="checkbox" 
-                id="deduct-overtime"
-                checked={deductOvertime}
-                onChange={(e) => setDeductOvertime(e.target.checked)}
-                style={{width: "18px", height: "18px"}} 
-            />
+            <input type="checkbox" id="deduct-overtime" checked={deductOvertime} onChange={(e) => setDeductOvertime(e.target.checked)} style={{width: "18px", height: "18px"}} />
             <label htmlFor="deduct-overtime" style={{cursor: "pointer", fontSize: "1rem"}}>発表の超過分を質疑応答から引く</label>
         </div>
       </div>
       
-      <button id="go-to-timer-view" onClick={handleGoToTimerView} className="start-btn">
-         タイマー開始
-      </button>
+      <div className="main-start-actions">
+          <button id="go-to-timer-view" onClick={handleStartNormal} className="start-btn">
+             タイマー開始 (1画面)
+          </button>
+          <button onClick={handleStartMirror} className="start-mirror-btn">
+             プレゼン開始 (2画面)
+          </button>
+      </div>
 
       <p id="setup-status-message">{statusMessage || localStatusMessage}</p>
     </div>

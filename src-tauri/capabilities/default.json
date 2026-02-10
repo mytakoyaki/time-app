@@ -11,6 +11,9 @@
     "core:window:allow-set-fullscreen",
     "core:window:allow-set-position",
     "core:window:allow-set-size",
-    "core:window:allow-available-monitors"
+    "core:window:allow-available-monitors",
+    "core:webview:allow-create-webview",
+    "core:window:allow-close",
+    "core:window:allow-set-focus"
   ]
 }

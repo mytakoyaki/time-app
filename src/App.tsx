@@ -51,6 +51,12 @@ function App() {
       setView("timer");
   };
 
+  // 2画面開始処理を統合
+  const handleStartMirror = async (stages: TimerStage[]) => {
+      await openMirrorWindow(displaySettings);
+      handleStartSetup(stages);
+  };
+
   const handleNextStageWrapper = async () => {
       const hasNext = await nextStage(deductOvertime);
       if (!hasNext) {
@@ -59,6 +65,7 @@ function App() {
           } else {
               setView("setup");
               setStatusMessage("すべてのステージが終了しました！");
+              if (isMirrorOpen) closeMirrorWindow();
           }
       }
   };
@@ -114,6 +121,7 @@ function App() {
             } else {
                 setView("setup");
                 stopTimer();
+                if (isMirrorOpen) closeMirrorWindow();
             }
           } else if (view === "preset-manager") {
             handleClosePresetManager();
@@ -124,7 +132,7 @@ function App() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [view, isTimerRunning, stopTimer, startTimer, handleNextStageWrapper, isMirrorMode]);
+  }, [view, isTimerRunning, stopTimer, startTimer, handleNextStageWrapper, isMirrorMode, isMirrorOpen]);
 
   if (view === "preset-manager") {
       return (
@@ -186,7 +194,7 @@ function App() {
             setDeductOvertime={setDeductOvertime}
             statusMessage={statusMessage}
             isMirrorOpen={isMirrorOpen}
-            onToggleMirror={() => isMirrorOpen ? closeMirrorWindow() : openMirrorWindow(displaySettings)}
+            onStartWithMirror={handleStartMirror}
         />
       ) : (
         <TimerView
