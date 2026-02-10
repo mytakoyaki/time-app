@@ -61,7 +61,10 @@ export function useTimer(enableSound: boolean, selectedSoundType: SoundType = "s
             if (enableSoundRef.current && stages.length > 0 && index < stages.length) {
                 const currentStage = stages[index];
                 const isQA = currentStage.name.includes("質疑"); 
-                if (!isQA && remaining === currentStage.warningThreshold && remaining > 0) {
+                
+                // 警告音: ちょうどしきい値になった瞬間のみ鳴らす
+                // (開始秒数がしきい値より短い場合は鳴らさない)
+                if (!isQA && remaining === currentStage.warningThreshold && remaining > 0 && currentStage.duration > currentStage.warningThreshold) {
                     playWarningSound(selectedSoundTypeRef.current);
                 }
                 if (remaining === 0) {

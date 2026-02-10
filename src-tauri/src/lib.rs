@@ -15,10 +15,12 @@ fn greet(name: &str) -> String {
 async fn start_timer(app_handle: tauri::AppHandle, state: tauri::State<'_, Arc<Mutex<TimerState>>>, duration_seconds: i64) -> Result<(), String> {
     let mut timer_state = state.lock().map_err(|e| e.to_string())?;
 
-    // もしすでに実行中なら、古いセッションを無効化するためにIDを増やす
     timer_state.session_id += 1;
     let new_session_id = timer_state.session_id;
 
+    // 現在の「残り秒数」を開始点として記録
+    timer_state.duration_at_start = duration_seconds;
+    timer_state.start_time = Some(std::time::Instant::now());
     timer_state.remaining_seconds = duration_seconds;
     timer_state.is_running = true;
     
