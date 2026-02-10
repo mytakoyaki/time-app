@@ -48,15 +48,20 @@ function App() {
       setView("timer");
   };
 
+  const handleExitTimer = () => {
+      stopTimer();
+      setView("setup");
+      if (isMirrorOpen) closeMirrorWindow();
+  };
+
   const handleNextStageWrapper = async () => {
       const hasNext = await nextStage(deductOvertime);
       if (!hasNext) {
           if (isMirrorMode) {
               setStatusMessage("終了しました");
           } else {
-              setView("setup");
+              handleExitTimer();
               setStatusMessage("すべてのステージが終了しました！");
-              if (isMirrorOpen) closeMirrorWindow();
           }
       }
   };
@@ -72,9 +77,7 @@ function App() {
         case "R": if (view === "timer") resetTimer(); break;
         case "Escape":
           if (view === "timer") {
-            setView("setup");
-            stopTimer();
-            if (isMirrorOpen) closeMirrorWindow();
+            handleExitTimer();
           } else if (view === "settings") {
             setView("setup");
           }
@@ -116,7 +119,7 @@ function App() {
                 timerStages={timerStages} currentStageIndex={currentStageIndex}
                 isTimerRunning={isTimerRunning} currentRemainingSeconds={currentRemainingSeconds}
                 statusMessage={statusMessage} onStart={() => {}} onStop={() => {}}
-                onReset={() => {}} onNext={() => {}} isMirror={true}
+                onReset={() => {}} onNext={() => {}} onExit={() => {}} isMirror={true}
             />
         </div>
     );
@@ -137,7 +140,7 @@ function App() {
             timerStages={timerStages} currentStageIndex={currentStageIndex}
             isTimerRunning={isTimerRunning} currentRemainingSeconds={currentRemainingSeconds}
             statusMessage={statusMessage} onStart={() => startTimer()} onStop={stopTimer}
-            onReset={resetTimer} onNext={handleNextStageWrapper} isMirror={false}
+            onReset={resetTimer} onNext={handleNextStageWrapper} onExit={handleExitTimer} isMirror={false}
         />
       )}
     </div>

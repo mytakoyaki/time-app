@@ -10,6 +10,7 @@ interface TimerViewProps {
   onStop: () => void;
   onReset: () => void;
   onNext: () => void;
+  onExit: () => void; // 追加
   isMirror?: boolean;
 }
 
@@ -23,9 +24,9 @@ export function TimerView({
   onStop,
   onReset,
   onNext,
+  onExit,
   isMirror = false
 }: TimerViewProps) {
-  // ミラーモード（外部ディスプレイ用）の場合は常にプレゼン用レイアウト
   const effectivePresentMode = isMirror;
 
   const formatTime = (totalSeconds: number) => {
@@ -63,25 +64,38 @@ export function TimerView({
       </div>
 
       {!effectivePresentMode && (
+          <>
           <div className="controls">
             {currentStageIndex < timerStages.length ? (
                 <>
-                <button id="start-timer" onClick={onStart} disabled={isTimerRunning}>
+                <button id="start-timer" onClick={onStart} disabled={isTimerRunning} title="Space">
                   {isTimerRunning ? "計測中" : "開始"}
                 </button>
-                <button id="stop-timer" onClick={onStop} disabled={!isTimerRunning}>
+                <button id="stop-timer" onClick={onStop} disabled={!isTimerRunning} title="Space">
                   停止
                 </button>
-                <button id="reset-timer" onClick={onReset}>
+                <button id="reset-timer" onClick={onReset} title="R">
                   リセット
                 </button>
                 </>
             ) : null}
             
-             <button id="next-stage" onClick={onNext}>
+             <button id="next-stage" onClick={onNext} className="next-btn" title="Enter">
                 {currentStageIndex < timerStages.length - 1 ? "次のステージへ" : "終了する"}
             </button>
+
+            <button id="exit-timer" onClick={onExit} className="exit-btn" title="Esc">
+                終了して戻る
+            </button>
           </div>
+
+          <div className="shortcut-guide">
+              <span>[Space] 開始/停止</span>
+              <span>[Enter] 次へ</span>
+              <span>[R] リセット</span>
+              <span>[Esc] 終了</span>
+          </div>
+          </>
       )}
 
       {!effectivePresentMode && (

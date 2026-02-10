@@ -170,6 +170,32 @@ body { margin: 0; overflow-x: hidden; width: 100vw; height: 100vh; }
 .controls { display: flex; gap: 1rem; margin-bottom: 2vh; opacity: 0.3; transition: 0.3s; z-index: 10; }
 .controls:hover { opacity: 1; }
 
+.next-btn {
+    border-color: #646cff;
+    color: #fff;
+}
+
+.exit-btn {
+    border-color: #444;
+    color: #888;
+    margin-left: 2rem;
+}
+.exit-btn:hover {
+    border-color: #ef233c;
+    color: #fff;
+    background: #300;
+}
+
+.shortcut-guide {
+    display: flex;
+    gap: 1.5rem;
+    font-size: 0.9rem;
+    color: #444;
+    margin-bottom: 1vh;
+    font-weight: 500;
+    pointer-events: none;
+}
+
 #status-message {
     font-size: 1.5rem; 
     color: #aaa; 
