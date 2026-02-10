@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { availableMonitors, Monitor } from "@tauri-apps/api/window";
 import { Preset, TimerStage } from "../types";
 
 interface SetupViewProps {
@@ -23,6 +24,12 @@ export function SetupView({
   const [qaMinutes, setQaMinutes] = useState(3);
   const [qaSeconds, setQaSeconds] = useState(0);
   const [qaWarning, setQaWarning] = useState(30);
+
+  const [monitors, setMonitors] = useState<Monitor[]>([]);
+
+  useEffect(() => {
+    availableMonitors().then(setMonitors).catch(console.error);
+  }, []);
 
   const getStages = (): TimerStage[] | null => {
     const pSec = presentationMinutes * 60 + presentationSeconds;
@@ -95,7 +102,12 @@ export function SetupView({
           <button onClick={() => { const s = getStages(); if(s) onStartTimer(s); }} className="primary-start-btn">
              タイマー開始
           </button>
-          <button onClick={() => { const s = getStages(); if(s) onStartWithMirror(s); }} className="secondary-start-btn">
+          <button 
+            onClick={() => { const s = getStages(); if(s) onStartWithMirror(s); }} 
+            className="secondary-start-btn"
+            disabled={monitors.length <= 1}
+            title={monitors.length <= 1 ? "外部ディスプレイが接続されていません" : ""}
+          >
              プレゼン開始 (2画面)
           </button>
       </div>
