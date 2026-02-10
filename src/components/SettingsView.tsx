@@ -3,11 +3,9 @@ import { availableMonitors, Monitor } from "@tauri-apps/api/window";
 import { Preset, SoundType, DisplaySettings } from "../types";
 
 interface SettingsViewProps {
-  // Presets
   presets: Preset[];
   onSavePreset: (preset: Preset) => Promise<void>;
   onDeletePreset: (id: string) => Promise<void>;
-  // General Settings
   enableSound: boolean;
   onToggleSound: (val: boolean) => void;
   selectedSoundType: SoundType;
@@ -16,7 +14,6 @@ interface SettingsViewProps {
   onDisplaySettingsChange: (val: DisplaySettings) => void;
   deductOvertime: boolean;
   onDeductOvertimeChange: (val: boolean) => void;
-  // Navigation
   onClose: () => void;
 }
 
@@ -31,7 +28,7 @@ export function SettingsView({
   const [activeTab, setActiveTab] = useState<"general" | "presets">("general");
   const [monitors, setMonitors] = useState<Monitor[]>([]);
 
-  // Form State for Presets
+  // Form State
   const [editingPresetId, setEditingPresetId] = useState<string | null>(null);
   const [pmName, setPmName] = useState("");
   const [pmPMin, setPmPMin] = useState(5);
@@ -112,46 +109,68 @@ export function SettingsView({
               )}
 
               {activeTab === 'presets' && (
-                  <div className="presets-layout">
-                      <div className="preset-editor-mini">
-                          <h3>{editingPresetId ? "編集" : "新規作成"}</h3>
-                          <input type="text" value={pmName} onChange={(e) => setPmName(e.target.value)} placeholder="プリセット名" className="name-input" />
-                          <div className="editor-grid-mini">
-                              <div>
-                                  <label>発表:</label>
-                                  <input type="number" value={pmPMin} onChange={(e) => setPmPMin(parseInt(e.target.value)||0)} />分
-                                  <input type="number" value={pmPSec} onChange={(e) => setPmPSec(parseInt(e.target.value)||0)} />秒
+                  <div className="presets-full-layout">
+                      <div className="preset-form-area">
+                          <h3>{editingPresetId ? "プリセットを編集" : "新規プリセット作成"}</h3>
+                          <div className="form-group">
+                              <label>プリセット名</label>
+                              <input type="text" value={pmName} onChange={(e) => setPmName(e.target.value)} placeholder="例: LT (5分)" className="name-input-full" />
+                          </div>
+                          
+                          <div className="form-columns">
+                              <div className="form-col">
+                                  <h4>発表</h4>
+                                  <div className="input-row-flex">
+                                      <input type="number" value={pmPMin} onChange={(e) => setPmPMin(parseInt(e.target.value)||0)} />分
+                                      <input type="number" value={pmPSec} onChange={(e) => setPmPSec(parseInt(e.target.value)||0)} />秒
+                                  </div>
+                                  <div className="input-row-flex warning-row">
+                                      <label>警告:</label>
+                                      <input type="number" value={pmPWarn} onChange={(e) => setPmPWarn(parseInt(e.target.value)||0)} />秒前
+                                  </div>
                               </div>
-                              <div>
-                                  <label>質疑:</label>
-                                  <input type="number" value={pmQMin} onChange={(e) => setPmQMin(parseInt(e.target.value)||0)} />分
-                                  <input type="number" value={pmQSec} onChange={(e) => setPmQSec(parseInt(e.target.value)||0)} />秒
+                              <div className="form-col">
+                                  <h4>質疑応答</h4>
+                                  <div className="input-row-flex">
+                                      <input type="number" value={pmQMin} onChange={(e) => setPmQMin(parseInt(e.target.value)||0)} />分
+                                      <input type="number" value={pmQSec} onChange={(e) => setPmQSec(parseInt(e.target.value)||0)} />秒
+                                  </div>
+                                  <div className="input-row-flex warning-row">
+                                      <label>警告:</label>
+                                      <input type="number" value={pmQWarn} onChange={(e) => setPmQWarn(parseInt(e.target.value)||0)} />秒前
+                                  </div>
                               </div>
                           </div>
-                          <button onClick={async () => {
-                              if(!pmName) return;
-                              await onSavePreset({ id: editingPresetId || Date.now().toString(), name: pmName, pMin: pmPMin, pSec: pmPSec, pWarn: pmPWarn, qMin: pmQMin, qSec: pmQSec, qWarn: pmQWarn });
-                              resetPresetForm();
-                          }} className="save-btn">{editingPresetId ? "更新" : "追加"}</button>
-                          {editingPresetId && <button onClick={resetPresetForm} className="cancel-btn">キャンセル</button>}
+
+                          <div className="form-actions">
+                              <button onClick={async () => {
+                                  if(!pmName) { alert("名前を入力してください"); return; }
+                                  await onSavePreset({ id: editingPresetId || Date.now().toString(), name: pmName, pMin: pmPMin, pSec: pmPSec, pWarn: pmPWarn, qMin: pmQMin, qSec: pmQSec, qWarn: pmQWarn });
+                                  resetPresetForm();
+                              }} className="primary-btn">{editingPresetId ? "保存する" : "プリセットを追加"}</button>
+                              {editingPresetId && <button onClick={resetPresetForm} className="cancel-link">キャンセル</button>}
+                          </div>
                       </div>
 
-                      <div className="preset-list-mini">
-                          <h3>一覧</h3>
-                          <ul>
+                      <div className="preset-list-area">
+                          <h3>保存済みリスト</h3>
+                          <div className="preset-scroll-list">
                               {presets.map(p => (
-                                  <li key={p.id} onClick={() => handleEditPreset(p)} className={editingPresetId === p.id ? "editing" : ""}>
-                                      <span>{p.name}</span>
-                                      <button onClick={(e) => { e.stopPropagation(); onDeletePreset(p.id); }}>×</button>
-                                  </li>
+                                  <div key={p.id} onClick={() => handleEditPreset(p)} className={`preset-item ${editingPresetId === p.id ? "editing" : ""}`}>
+                                      <div className="p-info">
+                                          <div className="p-name">{p.name}</div>
+                                          <div className="p-details">{p.pMin}m:{p.pSec}s / {p.qMin}m:{p.qSec}s</div>
+                                      </div>
+                                      <button className="delete-btn" onClick={(e) => { e.stopPropagation(); onDeletePreset(p.id); }}>×</button>
+                                  </div>
                               ))}
-                          </ul>
+                          </div>
                       </div>
                   </div>
               )}
           </div>
 
-          <button onClick={onClose} className="back-btn">ホームに戻る</button>
+          <button onClick={onClose} className="back-home-btn">ホームに戻る</button>
       </div>
   );
 }

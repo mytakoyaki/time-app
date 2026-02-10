@@ -18,24 +18,30 @@ export function SetupView({
 }: SetupViewProps) {
   const [presentationMinutes, setPresentationMinutes] = useState(5);
   const [presentationSeconds, setPresentationSeconds] = useState(0);
+  const [presentationWarning, setPresentationWarning] = useState(60);
+
   const [qaMinutes, setQaMinutes] = useState(3);
   const [qaSeconds, setQaSeconds] = useState(0);
+  const [qaWarning, setQaWarning] = useState(30);
 
   const getStages = (): TimerStage[] | null => {
     const pSec = presentationMinutes * 60 + presentationSeconds;
     const qSec = qaMinutes * 60 + qaSeconds;
     const stages: TimerStage[] = [];
-    // 警告時間はデフォルト値を設定（詳細は設定やプリセットで管理）
-    if (pSec > 0) stages.push({ name: "発表", duration: pSec, warningThreshold: 60 });
-    if (qSec > 0) stages.push({ name: "質疑応答", duration: qSec, warningThreshold: 30 });
+    
+    if (pSec > 0) stages.push({ name: "発表", duration: pSec, warningThreshold: presentationWarning });
+    if (qSec > 0) stages.push({ name: "質疑応答", duration: qSec, warningThreshold: qaWarning });
+
     return stages.length > 0 ? stages : null;
   };
 
   const handleApplyPreset = (preset: Preset) => {
       setPresentationMinutes(preset.pMin);
       setPresentationSeconds(preset.pSec);
+      setPresentationWarning(preset.pWarn);
       setQaMinutes(preset.qMin);
       setQaSeconds(preset.qSec);
+      setQaWarning(preset.qWarn);
   };
 
   return (
@@ -46,7 +52,7 @@ export function SetupView({
       </div>
       
       <div className="preset-quick-select">
-          {presets.slice(0, 6).map((preset) => (
+          {presets.slice(0, 10).map((preset) => (
               <button key={preset.id} onClick={() => handleApplyPreset(preset)} className="preset-chip">
                   {preset.name}
               </button>
@@ -62,6 +68,11 @@ export function SetupView({
                 <input type="number" value={presentationSeconds} onChange={(e) => setPresentationSeconds(Math.max(0, Math.min(59, parseInt(e.target.value)||0)))} />
                 <span>秒</span>
             </div>
+            <div className="warning-input">
+                <label>警告 (残り):</label>
+                <input type="number" value={presentationWarning} onChange={(e) => setPresentationWarning(Math.max(0, parseInt(e.target.value)||0))} />
+                <span>秒</span>
+            </div>
         </div>
 
         <div className="input-card">
@@ -70,6 +81,11 @@ export function SetupView({
                 <input type="number" value={qaMinutes} onChange={(e) => setQaMinutes(Math.max(0, parseInt(e.target.value)||0))} />
                 <span>分</span>
                 <input type="number" value={qaSeconds} onChange={(e) => setQaSeconds(Math.max(0, Math.min(59, parseInt(e.target.value)||0)))} />
+                <span>秒</span>
+            </div>
+            <div className="warning-input">
+                <label>警告 (残り):</label>
+                <input type="number" value={qaWarning} onChange={(e) => setQaWarning(Math.max(0, parseInt(e.target.value)||0))} />
                 <span>秒</span>
             </div>
         </div>
