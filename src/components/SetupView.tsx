@@ -25,6 +25,7 @@ export function SetupView({
   const [qaSeconds, setQaSeconds] = useState(0);
   const [qaWarning, setQaWarning] = useState(30);
 
+  const [selectedPresetId, setSelectedPresetId] = useState("");
   const [monitors, setMonitors] = useState<Monitor[]>([]);
 
   useEffect(() => {
@@ -42,13 +43,16 @@ export function SetupView({
     return stages.length > 0 ? stages : null;
   };
 
-  const handleApplyPreset = (preset: Preset) => {
-      setPresentationMinutes(preset.pMin);
-      setPresentationSeconds(preset.pSec);
-      setPresentationWarning(preset.pWarn);
-      setQaMinutes(preset.qMin);
-      setQaSeconds(preset.qSec);
-      setQaWarning(preset.qWarn);
+  const handleApplyPreset = () => {
+      const preset = presets.find(p => p.id === selectedPresetId);
+      if (preset) {
+          setPresentationMinutes(preset.pMin);
+          setPresentationSeconds(preset.pSec);
+          setPresentationWarning(preset.pWarn);
+          setQaMinutes(preset.qMin);
+          setQaSeconds(preset.qSec);
+          setQaWarning(preset.qWarn);
+      }
   };
 
   return (
@@ -58,12 +62,25 @@ export function SetupView({
           <button onClick={onOpenSettings} className="settings-icon-btn" title="設定">⚙ 設定</button>
       </div>
       
-      <div className="preset-quick-select">
-          {presets.slice(0, 10).map((preset) => (
-              <button key={preset.id} onClick={() => handleApplyPreset(preset)} className="preset-chip">
-                  {preset.name}
-              </button>
-          ))}
+      <div className="preset-selection-row">
+          <label>プリセット:</label>
+          <select 
+            value={selectedPresetId} 
+            onChange={(e) => setSelectedPresetId(e.target.value)}
+            className="preset-select"
+          >
+              <option value="" disabled>選択してください</option>
+              {presets.map((p) => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+          </select>
+          <button 
+            onClick={handleApplyPreset} 
+            className="apply-preset-btn"
+            disabled={!selectedPresetId}
+          >
+              設定を反映
+          </button>
       </div>
 
       <div className="main-input-container">
