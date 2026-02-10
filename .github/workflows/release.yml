@@ -19,11 +19,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - platform: 'macos-latest' # Apple Silicon & Intel
+          - platform: 'macos-latest'
             args: '--target universal-apple-darwin'
           - platform: 'windows-latest'
             args: ''
-          - platform: 'ubuntu-22.04' # Debian & AppImage
+          - platform: 'ubuntu-22.04'
             args: ''
 
     runs-on: ${{ matrix.platform }}
@@ -60,15 +60,12 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Appleコード署名用の秘密情報 (GitHub Secretsに設定が必要)
+          # Secretsが設定されている場合のみ署名環境変数をセットする
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          # Windowsコード署名用の秘密情報 (GitHub Secretsに設定が必要)
-          # WIN_CERTIFICATE: ${{ secrets.WIN_CERTIFICATE }}
-          # WIN_CERTIFICATE_PASSWORD: ${{ secrets.WIN_CERTIFICATE_PASSWORD }}
         with:
           tagName: ${{ github.ref_name }}
           releaseName: 'App v${{ github.ref_name }}'

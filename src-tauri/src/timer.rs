@@ -6,7 +6,6 @@ use tokio::time::{interval, MissedTickBehavior};
 pub struct TimerState {
     pub remaining_seconds: i64,
     pub is_running: bool,
-    pub initial_duration: i64,
 }
 
 impl Default for TimerState {
@@ -14,7 +13,6 @@ impl Default for TimerState {
         Self {
             remaining_seconds: 0,
             is_running: false,
-            initial_duration: 0,
         }
     }
 }
