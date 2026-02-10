@@ -44,6 +44,17 @@ GitHub Actions を通じて、以下の形式が自動生成されます。
 - `tauri-action` でビルドされたバイナリを MSIX 形式としてアップロード可能です。
 - パートナーセンターでの登録が必要です。
 
-### Mac App Store
-- サンドボックス設定を有効にする必要があります (`tauri.conf.json` で設定可能)。
-- 現在のマルチウィンドウ（ミラーウィンドウ）機能がサンドボックス制限に抵触しないか精査が必要です。
+## 5. OSごとの注意点
+
+### Linux (Audio/Webview)
+Linux環境では、Webviewや音声再生のために以下のパッケージが必要になる場合があります。配布時にユーザーへ通知することを推奨します。
+```bash
+sudo apt-get install libwebkit2gtk-4.1-dev libayatana-appindicator3-dev
+```
+
+### Windows (DPI Awareness)
+本アプリは高解像度ディスプレイに対応（DPI Aware）しています。4Kモニター等でも文字がボケることなく、鮮明に表示されます。
+
+### 自動アップデート
+Tauri Updater が有効になっています。新しいバージョンを GitHub Releases に公開すると、起動時にユーザーへ更新通知が表示されます。
+※ `tauri.conf.json` の `pubkey` とエンドポイントURLを環境に合わせて変更してください。

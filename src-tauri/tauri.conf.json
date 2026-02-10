@@ -25,6 +25,16 @@
       "csp": null
     }
   },
+  "plugins": {
+    "updater": {
+      "active": true,
+      "endpoints": [
+        "https://github.com/CHANGE_ME/time-app/releases/latest/download/latest.json"
+      ],
+      "dialog": true,
+      "pubkey": "CONTENT_OF_TAURI_PUBLIC_KEY"
+    }
+  },
   "bundle": {
     "active": true,
     "targets": ["msi", "nsis", "app", "dmg", "deb", "appimage"],
