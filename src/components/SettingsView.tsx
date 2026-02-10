@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { availableMonitors, Monitor } from "@tauri-apps/api/window";
 import { Preset, SoundType, DisplaySettings } from "../types";
 
