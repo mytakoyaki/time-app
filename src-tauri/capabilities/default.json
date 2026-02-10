@@ -28,7 +28,7 @@
     "core:webview:allow-set-webview-size",
     "core:webview:allow-set-webview-position",
     "core:webview:allow-webview-show",
-    "core:webview:allow-hide-webview",
+    "core:webview:allow-webview-hide",
     "core:event:allow-emit",
     "core:event:allow-listen"
   ]
