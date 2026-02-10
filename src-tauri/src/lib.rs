@@ -2,7 +2,7 @@ mod timer;
 use timer::{TimerState, run_timer_loop};
 
 use std::sync::{Arc, Mutex};
-use tauri::Emitter;
+use tauri::Manager;
 
 // 既存のgreetコマンド
 #[tauri::command]
