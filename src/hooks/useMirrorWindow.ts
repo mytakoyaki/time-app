@@ -12,7 +12,6 @@ export function useMirrorWindow() {
                 await mirrorWindow.setFocus();
                 return;
             } catch (e) {
-                // すでに閉じられている可能性があるため続行
                 setMirrorWindow(null);
             }
         }
@@ -27,45 +26,52 @@ export function useMirrorWindow() {
             targetMonitor = monitors[1];
         }
 
-        const label = "mirror";
-        const newWindow = new WebviewWindow(label, {
-            url: "index.html?mode=mirror",
-            title: "発表タイマー（表示用）",
-            fullscreen: true,
-            x: targetMonitor.position.x,
-            y: targetMonitor.position.y,
-            decorations: false,
-            alwaysOnTop: true,
-            skipTaskbar: true,
-            visible: false, // 準備ができるまで隠しておく
-        });
+        try {
+            // Tauri v2 ではまず最小限の構成でウィンドウを作成し、
+            // その後でフルスクリーンなどの設定を適用するのが確実です
+            const newWindow = new WebviewWindow("mirror", {
+                url: "index.html?mode=mirror",
+                title: "発表タイマー（表示用）",
+                x: targetMonitor.position.x,
+                y: targetMonitor.position.y,
+                width: 800,
+                height: 600,
+                decorations: false,
+                alwaysOnTop: true,
+                skipTaskbar: true,
+                visible: false,
+            });
 
-        newWindow.once("tauri://created", async () => {
-            setMirrorWindow(newWindow);
-            try {
-                // 明示的に全画面化と位置設定を再試行
-                await newWindow.setPosition(targetMonitor.position);
-                await newWindow.setFullscreen(true);
-                await newWindow.show();
-                await newWindow.setFocus();
-            } catch (e) {
-                console.error("Error finalizing mirror window", e);
-            }
-        });
+            newWindow.once("tauri://created", async () => {
+                setMirrorWindow(newWindow);
+                try {
+                    // ウィンドウ生成後に全画面化と表示を行う
+                    await newWindow.setFullscreen(true);
+                    await newWindow.show();
+                    await newWindow.setFocus();
+                } catch (e) {
+                    console.error("Error finalizing mirror window", e);
+                }
+            });
 
-        newWindow.once("tauri://error", (e) => {
-            console.error("Failed to create mirror window", e);
-            alert("外部ウィンドウの作成に失敗しました。権限設定を確認してください。");
-        });
+            newWindow.once("tauri://error", (e) => {
+                console.error("Window creation error event:", e);
+                alert("ウィンドウ作成エラーが発生しました。");
+            });
 
-        newWindow.onCloseRequested(() => {
-            setMirrorWindow(null);
-        });
+        } catch (error) {
+            console.error("Caught window creation error:", error);
+            alert("ウィンドウを作成する権限がないか、エラーが発生しました。アプリを再起動して試してください。");
+        }
     };
 
     const closeMirrorWindow = async () => {
         if (mirrorWindow) {
-            await mirrorWindow.close();
+            try {
+                await mirrorWindow.close();
+            } catch (e) {
+                console.error("Error closing window", e);
+            }
             setMirrorWindow(null);
         }
     };

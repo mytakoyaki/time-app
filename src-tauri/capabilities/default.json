@@ -8,16 +8,21 @@
     "opener:default",
     "store:default",
     "core:window:allow-create",
+    "core:window:allow-close",
+    "core:window:allow-set-title",
+    "core:window:allow-set-focus",
     "core:window:allow-set-fullscreen",
     "core:window:allow-set-position",
     "core:window:allow-set-size",
-    "core:window:allow-available-monitors",
-    "core:webview:allow-create-webview",
-    "core:window:allow-close",
-    "core:window:allow-set-focus",
     "core:window:allow-show",
     "core:window:allow-hide",
     "core:window:allow-maximize",
-    "core:window:allow-unmaximize"
+    "core:window:allow-unmaximize",
+    "core:window:allow-available-monitors",
+    "core:webview:allow-create-webview",
+    "core:webview:allow-set-webview-size",
+    "core:webview:allow-set-webview-position",
+    "core:webview:allow-show-webview",
+    "core:webview:allow-hide-webview"
   ]
 }
