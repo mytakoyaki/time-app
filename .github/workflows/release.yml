@@ -2,8 +2,6 @@ name: Release Application
 
 on:
   push:
-    branches:
-      - master
     tags:
       - 'v*'
   workflow_dispatch:
@@ -18,7 +16,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [macos-latest, ubuntu-22.04, windows-latest]
+        include:
+          - platform: 'macos-latest' # Apple Silicon & Intel
+            args: '--target universal-apple-darwin'
+          - platform: 'windows-latest'
+            args: ''
+          - platform: 'ubuntu-22.04' # Debian & AppImage
+            args: ''
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -29,7 +33,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm' # npmのキャッシュを有効化
+          cache: 'npm'
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -50,14 +54,23 @@ jobs:
       - name: Install frontend dependencies
         run: npm install
 
-      - name: Build Tauri App
+      - name: Build and Release
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Appleコード署名用の秘密情報 (GitHub Secretsに設定が必要)
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          # Windowsコード署名用の秘密情報 (GitHub Secretsに設定が必要)
+          # WIN_CERTIFICATE: ${{ secrets.WIN_CERTIFICATE }}
+          # WIN_CERTIFICATE_PASSWORD: ${{ secrets.WIN_CERTIFICATE_PASSWORD }}
         with:
           tagName: ${{ github.ref_name }}
-          releaseName: 'App ${{ github.ref_name }}'
-          releaseBody: 'See the assets to download this version and install.'
+          releaseName: 'App v${{ github.ref_name }}'
+          releaseBody: 'Release ${{ github.ref_name }}'
           releaseDraft: true
           prerelease: false
-          args: ${{ matrix.platform == 'macos-latest' && '--target universal-apple-darwin' || '' }}
+          args: ${{ matrix.args }}
