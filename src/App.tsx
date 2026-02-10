@@ -61,19 +61,21 @@ function App() {
           }
           break;
         case " ": // Space: Start/Stop
-          e.preventDefault();
           if (view === "timer") {
+            e.preventDefault();
             if (isTimerRunning) stopTimer();
             else startTimer();
+          }
+          // Setup画面では標準の挙動（ボタンのクリック等）に任せるため preventDefault しない
+          break;
+        case "Enter": // Enter: Next Stage or Start
+          if (view === "timer") {
+            e.preventDefault();
+            handleNextStageWrapper();
           } else if (view === "setup") {
-            // Setup画面でSpaceを押すと開始（利便性のため）
+            // Setup画面でEnterを押すと開始
             const startBtn = document.getElementById("go-to-timer-view");
             startBtn?.click();
-          }
-          break;
-        case "Enter": // Enter: Next Stage
-          if (view === "timer") {
-            handleNextStageWrapper();
           }
           break;
         case "r":
