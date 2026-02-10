@@ -459,24 +459,29 @@ h1 {
     background-color: black;
     justify-content: center !important;
     padding: 0 !important;
+    overflow: hidden;
 }
 
 .timer-display.present-mode {
-    font-size: 45vw;
+    /* 画面の高さ80%を上限にしつつ、横幅も考慮 */
+    font-size: min(70vh, 32vw); 
     flex-grow: 0;
+    transform: scaleX(0.95); /* 横幅5%縮小を維持 */
+    width: auto;
 }
 
 .stage-label.present-stage {
     position: absolute;
-    top: 5vh;
+    top: 2vh;
     font-size: 5vh;
+    color: #444;
 }
 
 .present-hint {
     position: absolute;
-    bottom: 5vh;
-    color: #333;
-    font-size: 1.2rem;
+    bottom: 2vh;
+    color: #222;
+    font-size: 1rem;
     pointer-events: none;
 }
 

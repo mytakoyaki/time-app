@@ -52,6 +52,14 @@ function App() {
       }
 
       switch (e.key) {
+        case "l":
+        case "L":
+          if (e.ctrlKey || e.metaKey) {
+            e.preventDefault();
+            // dispatch custom event to toggle fullscreen in TimerView
+            window.dispatchEvent(new CustomEvent("toggle-fullscreen"));
+          }
+          break;
         case " ": // Space: Start/Stop
           e.preventDefault();
           if (view === "timer") {

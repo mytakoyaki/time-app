@@ -27,6 +27,12 @@ export function TimerView({
 }: TimerViewProps) {
   const [isPresentMode, setIsPresentMode] = useState(false);
 
+  useEffect(() => {
+    const handleToggle = () => togglePresentMode();
+    window.addEventListener("toggle-fullscreen", handleToggle);
+    return () => window.removeEventListener("toggle-fullscreen", handleToggle);
+  }, [isPresentMode]);
+
   const togglePresentMode = async () => {
       const newMode = !isPresentMode;
       setIsPresentMode(newMode);
