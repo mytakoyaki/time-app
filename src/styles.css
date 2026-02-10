@@ -429,6 +429,7 @@ h1 {
     display: flex;
     justify-content: center;
     align-items: center;
+    text-align: center;
     
     font-size: 35vw; 
     font-family: 'Courier New', Courier, monospace;
@@ -441,7 +442,7 @@ h1 {
     transform: scaleX(0.95);
     transform-origin: center;
     
-    margin: 0;
+    margin: auto;
     padding: 0;
     width: 100%;
 }
@@ -460,6 +461,12 @@ h1 {
     justify-content: center !important;
     padding: 0 !important;
     overflow: hidden;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999;
 }
 
 .timer-display.present-mode {
@@ -467,7 +474,9 @@ h1 {
     font-size: min(70vh, 32vw); 
     flex-grow: 0;
     transform: scaleX(0.95); /* 横幅5%縮小を維持 */
-    width: auto;
+    width: 100%;
+    height: 100%;
+    margin: 0;
 }
 
 .stage-label.present-stage {

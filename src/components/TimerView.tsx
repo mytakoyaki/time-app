@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { TimerStage } from "../types";
 
@@ -28,7 +28,19 @@ export function TimerView({
   const [isPresentMode, setIsPresentMode] = useState(false);
 
   useEffect(() => {
-    const handleToggle = () => togglePresentMode();
+    const handleToggle = () => {
+        const toggleFullscreen = async () => {
+            const newMode = !isPresentMode;
+            setIsPresentMode(newMode);
+            const appWindow = getCurrentWindow();
+            try {
+                await appWindow.setFullscreen(newMode);
+            } catch (e) {
+                console.error("Failed to set fullscreen", e);
+            }
+        };
+        toggleFullscreen();
+    };
     window.addEventListener("toggle-fullscreen", handleToggle);
     return () => window.removeEventListener("toggle-fullscreen", handleToggle);
   }, [isPresentMode]);
