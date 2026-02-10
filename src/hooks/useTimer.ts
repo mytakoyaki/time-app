@@ -113,7 +113,8 @@ export function useTimer(enableSound: boolean, selectedSoundType: SoundType = "s
       setCurrentStageIndex(0);
       setIsTimerRunning(false);
       setCurrentRemainingSeconds(initialRemaining);
-      setStatusMessage("タイマーを開始してください。");
+      const msg = "タイマーを開始してください。";
+      setStatusMessage(msg);
       
       // 同期イベントを投げる
       syncState({ 
@@ -121,7 +122,7 @@ export function useTimer(enableSound: boolean, selectedSoundType: SoundType = "s
           index: 0, 
           running: false, 
           remaining: initialRemaining,
-          message: "タイマーを開始してください。"
+          message: msg
       });
 
       try {
@@ -131,18 +132,25 @@ export function useTimer(enableSound: boolean, selectedSoundType: SoundType = "s
       }
   };
 
-  const startTimer = async (durationSecondsOverride?: number) => {
-    if (isTimerRunning) return;
-    if (currentStageIndex >= timerStages.length) return;
+  const startTimer = async (durationSecondsOverride?: number, indexOverride?: number) => {
+    if (isTimerRunning && durationSecondsOverride === undefined) return;
+    
+    const index = indexOverride !== undefined ? indexOverride : currentStageIndex;
+    if (index >= timerStages.length) return;
 
     const duration = durationSecondsOverride !== undefined ? durationSecondsOverride : currentRemainingSeconds;
-    const currentStage = timerStages[currentStageIndex];
+    const currentStage = timerStages[index];
     
     setIsTimerRunning(true);
     const msg = `${currentStage.name}を開始しました。`;
     setStatusMessage(msg);
 
-    syncState({ running: true, message: msg, remaining: duration });
+    syncState({ 
+        running: true, 
+        message: msg, 
+        remaining: duration,
+        index: index // 明示的にインデックスを送る
+    });
 
     try {
       await invoke("start_timer", { durationSeconds: duration });
@@ -199,7 +207,7 @@ export function useTimer(enableSound: boolean, selectedSoundType: SoundType = "s
           setCurrentRemainingSeconds(nextDuration);
           setStatusMessage(msg);
           
-          await startTimer(nextDuration);
+          await startTimer(nextDuration, nextIndex);
           return true;
       } else {
           return false;
