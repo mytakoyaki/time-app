@@ -107,39 +107,53 @@ body { margin: 0; overflow-x: hidden; width: 100vw; height: 100vh; }
 
 .settings-content { width: 100%; background: #111; border-radius: 12px; padding: 2rem; box-sizing: border-box; }
 
-/* Presets Full Layout */
-.presets-full-layout { display: grid; grid-template-columns: 1.2fr 1fr; gap: 3rem; }
-.preset-form-area h3, .preset-list-area h3 { margin-top: 0; color: #aaa; font-size: 1.2rem; }
-
-.form-group { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.5rem; }
-.form-group label { color: #666; font-size: 0.9rem; }
-.name-input-full {
-    background: #000; border: 1px solid #333; padding: 0.8rem; border-radius: 8px;
-    font-size: 1.2rem; color: #fff;
-}
-
-.form-columns { display: flex; gap: 2rem; margin-bottom: 2rem; }
-.form-col { flex: 1; background: #1a1a1a; padding: 1rem; border-radius: 8px; }
-.form-col h4 { margin: 0 0 1rem 0; font-size: 1rem; color: #646cff; }
-.input-row-flex { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.8rem; }
-.input-row-flex input { width: 60px; padding: 0.4rem; background: #000; border: 1px solid #333; color: #fff; border-radius: 4px; text-align: center; }
-.warning-row { font-size: 0.9rem; color: #fca311; border-top: 1px solid #222; padding-top: 0.8rem; }
-
-.form-actions { display: flex; align-items: center; gap: 1.5rem; }
-.primary-btn { background: #646cff; border: none; padding: 0.8rem 2rem; border-radius: 8px; font-weight: bold; cursor: pointer; }
-.cancel-link { background: transparent; border: none; color: #666; cursor: pointer; text-decoration: underline; }
-
-.preset-scroll-list { height: 400px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.8rem; }
-.preset-item {
-    background: #1a1a1a; padding: 1rem; border-radius: 8px; border: 1px solid #333;
+/* Presets List View (Full) */
+.preset-list-full { width: 100%; }
+.preset-grid { display: flex; flex-direction: column; gap: 1rem; }
+.preset-card-wide {
+    background: #1a1a1a; padding: 1.2rem 2rem; border-radius: 12px; border: 1px solid #333;
     display: flex; justify-content: space-between; align-items: center; cursor: pointer;
+    transition: 0.2s;
 }
-.preset-item:hover { border-color: #646cff; }
-.preset-item.editing { border-color: #646cff; background: #222; }
-.p-name { font-weight: bold; margin-bottom: 0.2rem; }
-.p-details { font-size: 0.8rem; color: #666; }
-.delete-btn { background: transparent; border: none; color: #444; font-size: 1.5rem; cursor: pointer; }
-.delete-btn:hover { color: #ef233c; }
+.preset-card-wide:hover { border-color: #646cff; background: #222; }
+.p-title { font-size: 1.3rem; font-weight: bold; margin-bottom: 0.3rem; color: #fff; }
+.p-meta { font-size: 0.9rem; color: #888; display: flex; gap: 1rem; }
+.separator { color: #444; }
+.p-actions { display: flex; align-items: center; gap: 1.5rem; }
+.edit-link { background: transparent; border: none; color: #646cff; cursor: pointer; font-size: 1rem; }
+.delete-btn-large {
+    background: rgba(239, 35, 60, 0.1); border: 1px solid rgba(239, 35, 60, 0.3);
+    color: #ef233c; padding: 0.4rem 1rem; border-radius: 6px; cursor: pointer;
+}
+.delete-btn-large:hover { background: #ef233c; color: #fff; }
+
+/* Preset Editor Standalone */
+.preset-editor-standalone { width: 100%; max-width: 800px; margin: 0 auto; }
+.name-input-large {
+    width: 100%; background: #000; border: 1px solid #333; padding: 1rem; border-radius: 10px;
+    font-size: 1.5rem; color: #fff; margin-bottom: 2rem;
+}
+.editor-columns-wide { display: flex; gap: 3rem; margin-bottom: 3rem; }
+.input-group-large { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 1.5rem; }
+.input-group-large input {
+    width: 80px; font-size: 2rem; text-align: center; background: #000;
+    border: 1px solid #444; color: #fff; border-radius: 8px; padding: 0.5rem 0;
+}
+.warning-setting { display: flex; align-items: center; gap: 0.8rem; color: #fca311; border-top: 1px solid #222; padding-top: 1.5rem; }
+.warning-setting input {
+    width: 60px; background: #000; border: 1px solid #444; color: #fca311;
+    text-align: center; font-size: 1.2rem; padding: 0.3rem; border-radius: 4px;
+}
+
+.editor-footer { display: flex; align-items: center; gap: 2rem; margin-top: 2rem; border-top: 1px solid #222; padding-top: 2rem; }
+.main-save-btn {
+    background: #646cff; color: #fff; border: none; padding: 1rem 3rem;
+    border-radius: 12px; font-size: 1.2rem; font-weight: bold; cursor: pointer;
+}
+.main-save-btn:hover { background: #7a81ff; }
+.cancel-btn-text { background: transparent; border: none; color: #666; cursor: pointer; text-decoration: underline; font-size: 1rem; }
+
+.empty-msg { text-align: center; color: #444; padding: 3rem; font-size: 1.2rem; }
 
 .back-home-btn { margin-top: 2rem; background: transparent; border: 1px solid #333; padding: 0.6rem 2rem; border-radius: 20px; color: #666; cursor: pointer; }
 .back-home-btn:hover { color: #fff; border-color: #fff; }

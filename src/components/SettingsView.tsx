@@ -25,7 +25,7 @@ export function SettingsView({
   deductOvertime, onDeductOvertimeChange,
   onClose
 }: SettingsViewProps) {
-  const [activeTab, setActiveTab] = useState<"general" | "presets">("general");
+  const [activeTab, setActiveTab] = useState<"general" | "list" | "editor">("general");
   const [monitors, setMonitors] = useState<Monitor[]>([]);
 
   // Form State
@@ -54,6 +54,19 @@ export function SettingsView({
       setPmName(p.name);
       setPmPMin(p.pMin); setPmPSec(p.pSec); setPmPWarn(p.pWarn);
       setPmQMin(p.qMin); setPmQSec(p.qSec); setPmQWarn(p.qWarn);
+      setActiveTab("editor"); // 編集モードに切り替え
+  };
+
+  const handleSave = async () => {
+      if(!pmName) { alert("名前を入力してください"); return; }
+      await onSavePreset({ 
+          id: editingPresetId || Date.now().toString(), 
+          name: pmName, 
+          pMin: pmPMin, pSec: pmPSec, pWarn: pmPWarn, 
+          qMin: pmQMin, qSec: pmQSec, qWarn: pmQWarn 
+      });
+      resetPresetForm();
+      setActiveTab("list"); // 保存後はリストに戻る
   };
 
   return (
@@ -62,7 +75,10 @@ export function SettingsView({
           
           <div className="tab-navigation">
               <button className={`tab-btn ${activeTab === 'general' ? 'active' : ''}`} onClick={() => setActiveTab('general')}>一般・表示</button>
-              <button className={`tab-btn ${activeTab === 'presets' ? 'active' : ''}`} onClick={() => setActiveTab('presets')}>プリセット管理</button>
+              <button className={`tab-btn ${activeTab === 'list' ? 'active' : ''}`} onClick={() => setActiveTab('list')}>保存済みリスト</button>
+              <button className={`tab-btn ${activeTab === 'editor' ? 'active' : ''}`} onClick={() => { if(!editingPresetId) resetPresetForm(); setActiveTab('editor'); }}>
+                  {editingPresetId ? "プリセットを編集" : "新規作成"}
+              </button>
           </div>
           
           <div className="settings-content">
@@ -108,63 +124,79 @@ export function SettingsView({
                   </div>
               )}
 
-              {activeTab === 'presets' && (
-                  <div className="presets-full-layout">
-                      <div className="preset-form-area">
-                          <h3>{editingPresetId ? "プリセットを編集" : "新規プリセット作成"}</h3>
-                          <div className="form-group">
-                              <label>プリセット名</label>
-                              <input type="text" value={pmName} onChange={(e) => setPmName(e.target.value)} placeholder="例: LT (5分)" className="name-input-full" />
-                          </div>
-                          
-                          <div className="form-columns">
-                              <div className="form-col">
-                                  <h4>発表</h4>
-                                  <div className="input-row-flex">
-                                      <input type="number" value={pmPMin} onChange={(e) => setPmPMin(parseInt(e.target.value)||0)} />分
-                                      <input type="number" value={pmPSec} onChange={(e) => setPmPSec(parseInt(e.target.value)||0)} />秒
-                                  </div>
-                                  <div className="input-row-flex warning-row">
-                                      <label>警告:</label>
-                                      <input type="number" value={pmPWarn} onChange={(e) => setPmPWarn(parseInt(e.target.value)||0)} />秒前
-                                  </div>
-                              </div>
-                              <div className="form-col">
-                                  <h4>質疑応答</h4>
-                                  <div className="input-row-flex">
-                                      <input type="number" value={pmQMin} onChange={(e) => setPmQMin(parseInt(e.target.value)||0)} />分
-                                      <input type="number" value={pmQSec} onChange={(e) => setPmQSec(parseInt(e.target.value)||0)} />秒
-                                  </div>
-                                  <div className="input-row-flex warning-row">
-                                      <label>警告:</label>
-                                      <input type="number" value={pmQWarn} onChange={(e) => setPmQWarn(parseInt(e.target.value)||0)} />秒前
-                                  </div>
-                              </div>
-                          </div>
-
-                          <div className="form-actions">
-                              <button onClick={async () => {
-                                  if(!pmName) { alert("名前を入力してください"); return; }
-                                  await onSavePreset({ id: editingPresetId || Date.now().toString(), name: pmName, pMin: pmPMin, pSec: pmPSec, pWarn: pmPWarn, qMin: pmQMin, qSec: pmQSec, qWarn: pmQWarn });
-                                  resetPresetForm();
-                              }} className="primary-btn">{editingPresetId ? "保存する" : "プリセットを追加"}</button>
-                              {editingPresetId && <button onClick={resetPresetForm} className="cancel-link">キャンセル</button>}
-                          </div>
-                      </div>
-
-                      <div className="preset-list-area">
-                          <h3>保存済みリスト</h3>
-                          <div className="preset-scroll-list">
+              {activeTab === 'list' && (
+                  <div className="preset-list-full">
+                      {presets.length === 0 ? (
+                          <p className="empty-msg">保存されたプリセットはありません。</p>
+                      ) : (
+                          <div className="preset-grid">
                               {presets.map(p => (
-                                  <div key={p.id} onClick={() => handleEditPreset(p)} className={`preset-item ${editingPresetId === p.id ? "editing" : ""}`}>
-                                      <div className="p-info">
-                                          <div className="p-name">{p.name}</div>
-                                          <div className="p-details">{p.pMin}m:{p.pSec}s / {p.qMin}m:{p.qSec}s</div>
+                                  <div key={p.id} className="preset-card-wide" onClick={() => handleEditPreset(p)}>
+                                      <div className="p-main">
+                                          <div className="p-title">{p.name}</div>
+                                          <div className="p-meta">
+                                              <span>発表: {p.pMin}分{p.pSec}秒</span>
+                                              <span className="separator">|</span>
+                                              <span>質疑: {p.qMin}分{p.qSec}秒</span>
+                                          </div>
                                       </div>
-                                      <button className="delete-btn" onClick={(e) => { e.stopPropagation(); onDeletePreset(p.id); }}>×</button>
+                                      <div className="p-actions">
+                                          <button className="edit-link">編集</button>
+                                          <button className="delete-btn-large" onClick={(e) => { e.stopPropagation(); onDeletePreset(p.id); }}>削除</button>
+                                      </div>
                                   </div>
                               ))}
                           </div>
+                      )}
+                  </div>
+              )}
+
+              {activeTab === 'editor' && (
+                  <div className="preset-editor-standalone">
+                      <div className="form-group">
+                          <label>プリセット名</label>
+                          <input type="text" value={pmName} onChange={(e) => setPmName(e.target.value)} placeholder="例: 社内LT (5分)" className="name-input-large" />
+                      </div>
+                      
+                      <div className="editor-columns-wide">
+                          <div className="editor-col">
+                              <h4>発表設定</h4>
+                              <div className="input-group-large">
+                                  <input type="number" value={pmPMin} onChange={(e) => setPmPMin(parseInt(e.target.value)||0)} />
+                                  <span>分</span>
+                                  <input type="number" value={pmPSec} onChange={(e) => setPmPSec(parseInt(e.target.value)||0)} />
+                                  <span>秒</span>
+                              </div>
+                              <div className="warning-setting">
+                                  <label>警告タイミング:</label>
+                                  <input type="number" value={pmPWarn} onChange={(e) => setPmPWarn(parseInt(e.target.value)||0)} />
+                                  <span>秒前</span>
+                              </div>
+                          </div>
+                          
+                          <div className="editor-col">
+                              <h4>質疑応答設定</h4>
+                              <div className="input-group-large">
+                                  <input type="number" value={pmQMin} onChange={(e) => setPmQMin(parseInt(e.target.value)||0)} />
+                                  <span>分</span>
+                                  <input type="number" value={pmQSec} onChange={(e) => setPmQSec(parseInt(e.target.value)||0)} />
+                                  <span>秒</span>
+                              </div>
+                              <div className="warning-setting">
+                                  <label>警告タイミング:</label>
+                                  <input type="number" value={pmQWarn} onChange={(e) => setPmQWarn(parseInt(e.target.value)||0)} />
+                                  <span>秒前</span>
+                              </div>
+                          </div>
+                      </div>
+
+                      <div className="editor-footer">
+                          <button onClick={handleSave} className="main-save-btn">
+                              {editingPresetId ? "変更を保存する" : "新規プリセットとして保存"}
+                          </button>
+                          <button onClick={() => { resetPresetForm(); setActiveTab("list"); }} className="cancel-btn-text">
+                              キャンセル
+                          </button>
                       </div>
                   </div>
               )}
