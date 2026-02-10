@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { TimerStage } from "../types";
 
 interface TimerViewProps {
@@ -26,20 +25,8 @@ export function TimerView({
   onNext,
   isMirror = false
 }: TimerViewProps) {
-  const [isPresentationMode, setIsPresentationMode] = useState(false);
-
-  // ミラーモード（外部ディスプレイ用）の場合は、常にプレゼンモード（全画面レイアウト）にする
-  const effectivePresentMode = isPresentationMode || isMirror;
-
-  useEffect(() => {
-    const handleToggle = () => setIsPresentationMode(prev => !prev);
-    window.addEventListener("toggle-presentation-mode", handleToggle);
-    return () => window.removeEventListener("toggle-presentation-mode", handleToggle);
-  }, []);
-
-  const togglePresentMode = () => {
-      setIsPresentationMode(prev => !prev);
-  };
+  // ミラーモード（外部ディスプレイ用）の場合は常にプレゼン用レイアウト
+  const effectivePresentMode = isMirror;
 
   const formatTime = (totalSeconds: number) => {
     const absSeconds = Math.abs(totalSeconds);
@@ -94,15 +81,6 @@ export function TimerView({
              <button id="next-stage" onClick={onNext}>
                 {currentStageIndex < timerStages.length - 1 ? "次のステージへ" : "終了する"}
             </button>
-            <button id="toggle-present" onClick={togglePresentMode} style={{borderColor: "#646cff"}}>
-                プレゼンモード
-            </button>
-          </div>
-      )}
-
-      {effectivePresentMode && !isMirror && (
-          <div className="present-hint">
-              Ctrl + L または Esc で戻ります
           </div>
       )}
 

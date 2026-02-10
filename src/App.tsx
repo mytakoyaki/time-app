@@ -46,7 +46,6 @@ function App() {
     }
   }, [isMirrorMode]);
 
-  // クリーンアップ：メインウィンドウが閉じられたらミラーも閉じる
   useEffect(() => {
     if (isMirrorMode) return;
     const handleUnload = () => {
@@ -62,9 +61,7 @@ function App() {
   };
 
   const handleStartMirror = async (stages: TimerStage[]) => {
-      // ウィンドウを先に開く
       await openMirrorWindow(displaySettings);
-      // その後タイマーをセットアップ
       await setupTimer(stages);
       setView("timer");
   };
@@ -96,13 +93,6 @@ function App() {
       }
 
       switch (e.key) {
-        case "l":
-        case "L":
-          if (e.ctrlKey || e.metaKey) {
-            e.preventDefault();
-            window.dispatchEvent(new CustomEvent("toggle-presentation-mode"));
-          }
-          break;
         case " ":
           if (view === "timer") {
             e.preventDefault();
@@ -127,14 +117,9 @@ function App() {
           break;
         case "Escape":
           if (view === "timer") {
-            const timerView = document.getElementById("timer-view");
-            if (timerView?.classList.contains("present-container")) {
-                window.dispatchEvent(new CustomEvent("toggle-presentation-mode"));
-            } else {
-                setView("setup");
-                stopTimer();
-                if (isMirrorOpen) closeMirrorWindow();
-            }
+            setView("setup");
+            stopTimer();
+            if (isMirrorOpen) closeMirrorWindow();
           } else if (view === "preset-manager") {
             handleClosePresetManager();
           }
