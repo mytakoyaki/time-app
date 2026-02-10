@@ -11,6 +11,7 @@ interface TimerViewProps {
   onStop: () => void;
   onReset: () => void;
   onNext: () => void;
+  isMirror?: boolean;
 }
 
 export function TimerView({
@@ -22,9 +23,13 @@ export function TimerView({
   onStart,
   onStop,
   onReset,
-  onNext
+  onNext,
+  isMirror = false
 }: TimerViewProps) {
   const [isPresentationMode, setIsPresentationMode] = useState(false);
+
+  // ミラーモード（外部ディスプレイ用）の場合は、常にプレゼンモード（全画面レイアウト）にする
+  const effectivePresentMode = isPresentationMode || isMirror;
 
   useEffect(() => {
     const handleToggle = () => setIsPresentationMode(prev => !prev);
@@ -56,13 +61,13 @@ export function TimerView({
   let timerClass = "timer-display";
   if (isOvertime) timerClass += " overtime";
   else if (isWarning) timerClass += " warning";
-  if (isPresentationMode) timerClass += " present-mode";
+  if (effectivePresentMode) timerClass += " present-mode";
 
   const currentStageName = currentStage?.name || (currentStageIndex >= timerStages.length ? "完了" : "準備中");
 
   return (
-    <div id="timer-view" className={isPresentationMode ? "present-container" : ""}>
-      <div id="timer-stage-label" className={`stage-label ${isPresentationMode ? "present-stage" : ""}`}>
+    <div id="timer-view" className={effectivePresentMode ? "present-container" : ""}>
+      <div id="timer-stage-label" className={`stage-label ${effectivePresentMode ? "present-stage" : ""}`}>
         {currentStageName}
       </div>
       <div className={timerClass}>
@@ -70,7 +75,7 @@ export function TimerView({
         <span id="timer-seconds">{displaySeconds}</span>
       </div>
 
-      {!isPresentationMode && (
+      {!effectivePresentMode && (
           <div className="controls">
             {currentStageIndex < timerStages.length && (
                 <>
@@ -95,13 +100,13 @@ export function TimerView({
           </div>
       )}
 
-      {isPresentationMode && (
+      {effectivePresentMode && !isMirror && (
           <div className="present-hint">
               Ctrl + L または Esc で戻ります
           </div>
       )}
 
-      <p id="status-message" style={isPresentationMode ? {display: 'none'} : {}}>{statusMessage}</p>
+      <p id="status-message" style={effectivePresentMode ? {display: 'none'} : {}}>{statusMessage}</p>
     </div>
   );
 }

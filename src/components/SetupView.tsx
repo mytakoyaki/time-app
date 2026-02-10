@@ -12,6 +12,8 @@ interface SetupViewProps {
   deductOvertime: boolean;
   setDeductOvertime: (val: boolean) => void;
   statusMessage?: string;
+  isMirrorOpen: boolean;
+  onToggleMirror: () => void;
 }
 
 export function SetupView({
@@ -24,7 +26,9 @@ export function SetupView({
   onSoundTypeChange,
   deductOvertime,
   setDeductOvertime,
-  statusMessage
+  statusMessage,
+  isMirrorOpen,
+  onToggleMirror
 }: SetupViewProps) {
   // Local Inputs
   const [presentationMinutes, setPresentationMinutes] = useState(5);
@@ -51,7 +55,6 @@ export function SetupView({
     const pSec = presentationMinutes * 60 + presentationSeconds;
     const qSec = qaMinutes * 60 + qaSeconds;
     
-    // ステージを構築
     const stages: TimerStage[] = [];
     
     if (pSec > 0) {
@@ -191,6 +194,14 @@ export function SetupView({
                 style={{width: "20px", height: "20px"}} 
             />
             <label htmlFor="deduct-overtime" style={{cursor: "pointer"}}>発表の超過分を質疑応答から引く</label>
+        </div>
+        <div className="timer-option-row">
+            <button 
+                onClick={onToggleMirror}
+                className={isMirrorOpen ? "mirror-active-btn" : "mirror-btn"}
+            >
+                {isMirrorOpen ? "外部ディスプレイ表示を終了" : "外部ディスプレイに表示 (2画面)"}
+            </button>
         </div>
       </div>
       

@@ -1,12 +1,16 @@
 import { useState, useEffect } from "react";
 import { usePresets } from "./hooks/usePresets";
 import { useTimer } from "./hooks/useTimer";
+import { useMirrorWindow } from "./hooks/useMirrorWindow";
 import { SetupView } from "./components/SetupView";
 import { TimerView } from "./components/TimerView";
 import { PresetManager } from "./components/PresetManager";
 import { TimerStage } from "./types";
 
 function App() {
+  // --- Check Mode ---
+  const isMirrorMode = new URLSearchParams(window.location.search).get("mode") === "mirror";
+
   const [view, setView] = useState<"setup" | "timer" | "preset-manager">("setup");
   const [deductOvertime, setDeductOvertime] = useState(true);
   
@@ -25,6 +29,15 @@ function App() {
       nextStage 
   } = useTimer(enableSound, selectedSoundType);
 
+  const { isMirrorOpen, openMirrorWindow, closeMirrorWindow } = useMirrorWindow();
+
+  // ミラーモードの場合は、最初からタイマー表示にする
+  useEffect(() => {
+    if (isMirrorMode) {
+      setView("timer");
+    }
+  }, [isMirrorMode]);
+
   const handleStartSetup = (stages: TimerStage[]) => {
       setupTimer(stages);
       setView("timer");
@@ -33,8 +46,12 @@ function App() {
   const handleNextStageWrapper = async () => {
       const hasNext = await nextStage(deductOvertime);
       if (!hasNext) {
-          setView("setup");
-          setStatusMessage("すべてのステージが終了しました！");
+          if (isMirrorMode) {
+              setStatusMessage("終了しました");
+          } else {
+              setView("setup");
+              setStatusMessage("すべてのステージが終了しました！");
+          }
       }
   };
   
@@ -43,10 +60,11 @@ function App() {
       setStatusMessage("");
   }
 
-  // --- Keyboard Shortcuts (2A) ---
+  // --- Keyboard Shortcuts ---
   useEffect(() => {
+    if (isMirrorMode) return; // ミラーモードでは操作を受け付けない
+
     const handleKeyDown = (e: KeyboardEvent) => {
-      // フォーム入力中はショートカットを無効化
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
         return;
       }
@@ -56,7 +74,6 @@ function App() {
         case "L":
           if (e.ctrlKey || e.metaKey) {
             e.preventDefault();
-            // dispatch custom event to toggle presentation mode in TimerView
             window.dispatchEvent(new CustomEvent("toggle-presentation-mode"));
           }
           break;
@@ -66,14 +83,12 @@ function App() {
             if (isTimerRunning) stopTimer();
             else startTimer();
           }
-          // Setup画面では標準の挙動（ボタンのクリック等）に任せるため preventDefault しない
           break;
         case "Enter": // Enter: Next Stage or Start
           if (view === "timer") {
             e.preventDefault();
             handleNextStageWrapper();
           } else if (view === "setup") {
-            // Setup画面でEnterを押すと開始
             const startBtn = document.getElementById("go-to-timer-view");
             startBtn?.click();
           }
@@ -86,7 +101,6 @@ function App() {
           break;
         case "Escape": // Esc: Toggle presentation or Back to setup
           if (view === "timer") {
-            // もしプレゼンモード中なら、モード解除を優先する
             const timerView = document.getElementById("timer-view");
             if (timerView?.classList.contains("present-container")) {
                 window.dispatchEvent(new CustomEvent("toggle-presentation-mode"));
@@ -103,7 +117,7 @@ function App() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [view, isTimerRunning, stopTimer, startTimer, handleNextStageWrapper]);
+  }, [view, isTimerRunning, stopTimer, startTimer, handleNextStageWrapper, isMirrorMode]);
 
   if (view === "preset-manager") {
       return (
@@ -129,6 +143,25 @@ function App() {
       );
   }
 
+  if (isMirrorMode) {
+    return (
+        <div className="container">
+            <TimerView
+                timerStages={timerStages}
+                currentStageIndex={currentStageIndex}
+                isTimerRunning={isTimerRunning}
+                currentRemainingSeconds={currentRemainingSeconds}
+                statusMessage={statusMessage}
+                onStart={() => {}}
+                onStop={() => {}}
+                onReset={() => {}}
+                onNext={() => {}}
+                isMirror={true}
+            />
+        </div>
+    );
+  }
+
   return (
     <div className="container">
       {view === "setup" ? (
@@ -143,6 +176,8 @@ function App() {
             deductOvertime={deductOvertime}
             setDeductOvertime={setDeductOvertime}
             statusMessage={statusMessage}
+            isMirrorOpen={isMirrorOpen}
+            onToggleMirror={isMirrorOpen ? closeMirrorWindow : openMirrorWindow}
         />
       ) : (
         <TimerView
@@ -155,6 +190,7 @@ function App() {
             onStop={stopTimer}
             onReset={resetTimer}
             onNext={handleNextStageWrapper}
+            isMirror={false}
         />
       )}
     </div>

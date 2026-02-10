@@ -404,6 +404,27 @@ h1 {
     border-color: #646cff;
 }
 
+.mirror-btn {
+    background-color: #111;
+    border: 1px solid #444;
+    color: #aaa;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+}
+
+.mirror-btn:hover {
+    border-color: #646cff;
+    color: white;
+}
+
+.mirror-active-btn {
+    background-color: #646cff;
+    border: 1px solid #646cff;
+    color: white;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+}
+
 /* Timer View Styles */
 #timer-view {
   display: flex;
