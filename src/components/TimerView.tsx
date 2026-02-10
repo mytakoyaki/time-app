@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { getCurrentWindow } from "@tauri-apps/api/window";
 import { TimerStage } from "../types";
 
 interface TimerViewProps {
@@ -25,36 +24,16 @@ export function TimerView({
   onReset,
   onNext
 }: TimerViewProps) {
-  const [isPresentMode, setIsPresentMode] = useState(false);
+  const [isPresentationMode, setIsPresentationMode] = useState(false);
 
   useEffect(() => {
-    const handleToggle = () => {
-        const toggleFullscreen = async () => {
-            const newMode = !isPresentMode;
-            setIsPresentMode(newMode);
-            const appWindow = getCurrentWindow();
-            try {
-                await appWindow.setFullscreen(newMode);
-            } catch (e) {
-                console.error("Failed to set fullscreen", e);
-            }
-        };
-        toggleFullscreen();
-    };
-    window.addEventListener("toggle-fullscreen", handleToggle);
-    return () => window.removeEventListener("toggle-fullscreen", handleToggle);
-  }, [isPresentMode]);
+    const handleToggle = () => setIsPresentationMode(prev => !prev);
+    window.addEventListener("toggle-presentation-mode", handleToggle);
+    return () => window.removeEventListener("toggle-presentation-mode", handleToggle);
+  }, []);
 
-  const togglePresentMode = async () => {
-      const newMode = !isPresentMode;
-      setIsPresentMode(newMode);
-      
-      const appWindow = getCurrentWindow();
-      try {
-          await appWindow.setFullscreen(newMode);
-      } catch (e) {
-          console.error("Failed to set fullscreen", e);
-      }
+  const togglePresentMode = () => {
+      setIsPresentationMode(prev => !prev);
   };
 
   const formatTime = (totalSeconds: number) => {
@@ -77,13 +56,13 @@ export function TimerView({
   let timerClass = "timer-display";
   if (isOvertime) timerClass += " overtime";
   else if (isWarning) timerClass += " warning";
-  if (isPresentMode) timerClass += " present-mode";
+  if (isPresentationMode) timerClass += " present-mode";
 
   const currentStageName = currentStage?.name || (currentStageIndex >= timerStages.length ? "完了" : "準備中");
 
   return (
-    <div id="timer-view" className={isPresentMode ? "present-container" : ""}>
-      <div id="timer-stage-label" className={`stage-label ${isPresentMode ? "present-stage" : ""}`}>
+    <div id="timer-view" className={isPresentationMode ? "present-container" : ""}>
+      <div id="timer-stage-label" className={`stage-label ${isPresentationMode ? "present-stage" : ""}`}>
         {currentStageName}
       </div>
       <div className={timerClass}>
@@ -91,7 +70,7 @@ export function TimerView({
         <span id="timer-seconds">{displaySeconds}</span>
       </div>
 
-      {!isPresentMode && (
+      {!isPresentationMode && (
           <div className="controls">
             {currentStageIndex < timerStages.length && (
                 <>
@@ -111,18 +90,18 @@ export function TimerView({
                 {currentStageIndex < timerStages.length - 1 ? "次のステージへ" : "終了する"}
             </button>
             <button id="toggle-present" onClick={togglePresentMode} style={{borderColor: "#646cff"}}>
-                全画面表示
+                プレゼンモード
             </button>
           </div>
       )}
 
-      {isPresentMode && (
+      {isPresentationMode && (
           <div className="present-hint">
-              ESCキーで通常モードに戻ります
+              Ctrl + L または Esc で戻ります
           </div>
       )}
 
-      <p id="status-message" style={isPresentMode ? {display: 'none'} : {}}>{statusMessage}</p>
+      <p id="status-message" style={isPresentationMode ? {display: 'none'} : {}}>{statusMessage}</p>
     </div>
   );
 }

@@ -56,8 +56,8 @@ function App() {
         case "L":
           if (e.ctrlKey || e.metaKey) {
             e.preventDefault();
-            // dispatch custom event to toggle fullscreen in TimerView
-            window.dispatchEvent(new CustomEvent("toggle-fullscreen"));
+            // dispatch custom event to toggle presentation mode in TimerView
+            window.dispatchEvent(new CustomEvent("toggle-presentation-mode"));
           }
           break;
         case " ": // Space: Start/Stop
@@ -84,10 +84,16 @@ function App() {
             resetTimer();
           }
           break;
-        case "Escape": // Esc: Back to setup
+        case "Escape": // Esc: Toggle presentation or Back to setup
           if (view === "timer") {
-            setView("setup");
-            stopTimer();
+            // もしプレゼンモード中なら、モード解除を優先する
+            const timerView = document.getElementById("timer-view");
+            if (timerView?.classList.contains("present-container")) {
+                window.dispatchEvent(new CustomEvent("toggle-presentation-mode"));
+            } else {
+                setView("setup");
+                stopTimer();
+            }
           } else if (view === "preset-manager") {
             handleClosePresetManager();
           }
