@@ -167,23 +167,60 @@ body { margin: 0; overflow-x: hidden; width: 100vw; height: 100vh; }
 .timer-display.overtime { color: #ef233c; }
 .present-container { background-color: black; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; }
 .timer-display.present-mode { font-size: min(70vh, 32vw); }
-.controls { display: flex; gap: 1rem; margin-bottom: 2vh; opacity: 0.3; transition: 0.3s; z-index: 10; }
+.controls { display: flex; gap: 1.5rem; margin-bottom: 2vh; opacity: 0.8; transition: 0.3s; z-index: 10; }
 .controls:hover { opacity: 1; }
+
+#start-timer {
+    border-color: #4caf50;
+    color: #4caf50;
+    background: rgba(76, 175, 80, 0.1);
+}
+#start-timer:hover {
+    background: #4caf50;
+    color: #000;
+}
+
+#stop-timer {
+    border-color: #ff9800;
+    color: #ff9800;
+    background: rgba(255, 152, 0, 0.1);
+}
+#stop-timer:hover {
+    background: #ff9800;
+    color: #000;
+}
+
+#reset-timer {
+    border-color: #888;
+    color: #888;
+}
+#reset-timer:hover {
+    border-color: #fff;
+    color: #fff;
+}
 
 .next-btn {
     border-color: #646cff;
     color: #fff;
+    background: rgba(100, 108, 255, 0.2);
+    font-weight: bold;
+    padding: 0.6em 2em;
+}
+.next-btn:hover {
+    background: #646cff;
+    color: #fff;
 }
 
 .exit-btn {
-    border-color: #444;
-    color: #888;
-    margin-left: 2rem;
+    border-color: #f44336;
+    color: #f44336;
+    background: rgba(244, 67, 54, 0.1);
+    margin-left: 3rem;
 }
 .exit-btn:hover {
-    border-color: #ef233c;
+    border-color: #f44336;
     color: #fff;
-    background: #300;
+    background: #f44336;
 }
 
 .shortcut-guide {
