@@ -46,15 +46,6 @@ function App() {
     }
   }, [isMirrorMode]);
 
-  useEffect(() => {
-    if (isMirrorMode) return;
-    const handleUnload = () => {
-        if (isMirrorOpen) closeMirrorWindow();
-    };
-    window.addEventListener("beforeunload", handleUnload);
-    return () => window.removeEventListener("beforeunload", handleUnload);
-  }, [isMirrorOpen, isMirrorMode]);
-
   const handleStartSetup = (stages: TimerStage[]) => {
       setupTimer(stages);
       setView("timer");
