@@ -36,7 +36,7 @@ function App() {
       stopTimer, 
       resetTimer, 
       nextStage 
-  } = useTimer(enableSound, selectedSoundType);
+  } = useTimer(enableSound, selectedSoundType, isMirrorMode);
 
   const { isMirrorOpen, openMirrorWindow, closeMirrorWindow } = useMirrorWindow();
 
