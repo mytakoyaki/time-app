@@ -8,13 +8,22 @@ import { PresetManager } from "./components/PresetManager";
 import { TimerStage } from "./types";
 
 function App() {
-  // --- Check Mode ---
   const isMirrorMode = new URLSearchParams(window.location.search).get("mode") === "mirror";
 
   const [view, setView] = useState<"setup" | "timer" | "preset-manager">("setup");
   const [deductOvertime, setDeductOvertime] = useState(true);
   
-  const { presets, enableSound, selectedSoundType, savePresets, saveEnableSound, saveSelectedSoundType } = usePresets();
+  const { 
+      presets, 
+      enableSound, 
+      selectedSoundType, 
+      displaySettings,
+      savePresets, 
+      saveEnableSound, 
+      saveSelectedSoundType,
+      saveDisplaySettings
+  } = usePresets();
+
   const { 
       timerStages, 
       currentStageIndex, 
@@ -31,7 +40,6 @@ function App() {
 
   const { isMirrorOpen, openMirrorWindow, closeMirrorWindow } = useMirrorWindow();
 
-  // ミラーモードの場合は、最初からタイマー表示にする
   useEffect(() => {
     if (isMirrorMode) {
       setView("timer");
@@ -60,9 +68,8 @@ function App() {
       setStatusMessage("");
   }
 
-  // --- Keyboard Shortcuts ---
   useEffect(() => {
-    if (isMirrorMode) return; // ミラーモードでは操作を受け付けない
+    if (isMirrorMode) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
@@ -77,14 +84,14 @@ function App() {
             window.dispatchEvent(new CustomEvent("toggle-presentation-mode"));
           }
           break;
-        case " ": // Space: Start/Stop
+        case " ":
           if (view === "timer") {
             e.preventDefault();
             if (isTimerRunning) stopTimer();
             else startTimer();
           }
           break;
-        case "Enter": // Enter: Next Stage or Start
+        case "Enter":
           if (view === "timer") {
             e.preventDefault();
             handleNextStageWrapper();
@@ -94,12 +101,12 @@ function App() {
           }
           break;
         case "r":
-        case "R": // R: Reset
+        case "R":
           if (view === "timer") {
             resetTimer();
           }
           break;
-        case "Escape": // Esc: Toggle presentation or Back to setup
+        case "Escape":
           if (view === "timer") {
             const timerView = document.getElementById("timer-view");
             if (timerView?.classList.contains("present-container")) {
@@ -173,11 +180,13 @@ function App() {
             onToggleSound={saveEnableSound}
             selectedSoundType={selectedSoundType}
             onSoundTypeChange={saveSelectedSoundType}
+            displaySettings={displaySettings}
+            onDisplaySettingsChange={saveDisplaySettings}
             deductOvertime={deductOvertime}
             setDeductOvertime={setDeductOvertime}
             statusMessage={statusMessage}
             isMirrorOpen={isMirrorOpen}
-            onToggleMirror={isMirrorOpen ? closeMirrorWindow : openMirrorWindow}
+            onToggleMirror={() => isMirrorOpen ? closeMirrorWindow() : openMirrorWindow(displaySettings)}
         />
       ) : (
         <TimerView

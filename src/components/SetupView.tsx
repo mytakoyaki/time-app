@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { Preset, TimerStage, SoundType } from "../types";
+import { useState, useEffect } from "react";
+import { availableMonitors, Monitor } from "@tauri-apps/api/window";
+import { Preset, TimerStage, SoundType, DisplaySettings } from "../types";
 
 interface SetupViewProps {
   presets: Preset[];
@@ -9,6 +10,8 @@ interface SetupViewProps {
   onToggleSound: (enabled: boolean) => void;
   selectedSoundType: SoundType;
   onSoundTypeChange: (val: SoundType) => void;
+  displaySettings: DisplaySettings;
+  onDisplaySettingsChange: (val: DisplaySettings) => void;
   deductOvertime: boolean;
   setDeductOvertime: (val: boolean) => void;
   statusMessage?: string;
@@ -24,6 +27,8 @@ export function SetupView({
   onToggleSound,
   selectedSoundType,
   onSoundTypeChange,
+  displaySettings,
+  onDisplaySettingsChange,
   deductOvertime,
   setDeductOvertime,
   statusMessage,
@@ -40,6 +45,20 @@ export function SetupView({
   const [qaWarningSeconds, setQaWarningSeconds] = useState(30);
 
   const [localStatusMessage, setLocalStatusMessage] = useState("");
+  const [monitors, setMonitors] = useState<Monitor[]>([]);
+
+  // 接続されているモニターを取得
+  useEffect(() => {
+    const fetchMonitors = async () => {
+        try {
+            const m = await availableMonitors();
+            setMonitors(m);
+        } catch (e) {
+            console.error("Failed to fetch monitors", e);
+        }
+    };
+    fetchMonitors();
+  }, []);
 
   const handleApplyPreset = (preset: Preset) => {
       setPresentationMinutes(preset.pMin);
@@ -164,6 +183,7 @@ export function SetupView({
       
       <div className="timer-options">
         <div className="timer-option-row">
+            <label>通知音:</label>
             <input 
                 type="checkbox" 
                 id="enable-sound"
@@ -171,13 +191,11 @@ export function SetupView({
                 onChange={(e) => onToggleSound(e.target.checked)}
                 style={{width: "20px", height: "20px"}} 
             />
-            <label htmlFor="enable-sound" style={{cursor: "pointer"}}>通知音を鳴らす</label>
-            
             <select 
                 value={selectedSoundType} 
                 onChange={(e) => onSoundTypeChange(e.target.value as SoundType)}
                 disabled={!enableSound}
-                style={{marginLeft: "1rem", padding: "0.3rem", fontSize: "1rem", background: "#222", color: "white", border: "1px solid #444", borderRadius: "4px"}}
+                className="select-input"
             >
                 <option value="standard">標準 (サイン波)</option>
                 <option value="electronic">電子音 (矩形波)</option>
@@ -185,23 +203,38 @@ export function SetupView({
                 <option value="chime">チャイム風</option>
             </select>
         </div>
+
+        <div className="timer-option-row">
+            <label>出力先ディスプレイ:</label>
+            <select 
+                value={displaySettings.targetMonitorName || ""} 
+                onChange={(e) => onDisplaySettingsChange({ targetMonitorName: e.target.value || null })}
+                className="select-input"
+            >
+                <option value="">自動 (2枚目を優先)</option>
+                {monitors.map((m, i) => (
+                    <option key={i} value={m.name || ""}>
+                        {m.name || `Display ${i+1}`} ({m.size.width}x{m.size.height})
+                    </option>
+                ))}
+            </select>
+            <button 
+                onClick={onToggleMirror}
+                className={isMirrorOpen ? "mirror-active-btn" : "mirror-btn"}
+            >
+                {isMirrorOpen ? "停止" : "2画面表示を開始"}
+            </button>
+        </div>
+
         <div className="timer-option-row">
             <input 
                 type="checkbox" 
                 id="deduct-overtime"
                 checked={deductOvertime}
                 onChange={(e) => setDeductOvertime(e.target.checked)}
-                style={{width: "20px", height: "20px"}} 
+                style={{width: "18px", height: "18px"}} 
             />
-            <label htmlFor="deduct-overtime" style={{cursor: "pointer"}}>発表の超過分を質疑応答から引く</label>
-        </div>
-        <div className="timer-option-row">
-            <button 
-                onClick={onToggleMirror}
-                className={isMirrorOpen ? "mirror-active-btn" : "mirror-btn"}
-            >
-                {isMirrorOpen ? "外部ディスプレイ表示を終了" : "外部ディスプレイに表示 (2画面)"}
-            </button>
+            <label htmlFor="deduct-overtime" style={{cursor: "pointer", fontSize: "1rem"}}>発表の超過分を質疑応答から引く</label>
         </div>
       </div>
       

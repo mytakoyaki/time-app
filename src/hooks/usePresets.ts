@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { load } from "@tauri-apps/plugin-store";
-import { Preset, SoundType } from "../types";
+import { Preset, SoundType, DisplaySettings } from "../types";
 import { DEFAULT_PRESETS, PRESETS_FILE } from "../constants";
 
 export function usePresets() {
   const [presets, setPresets] = useState<Preset[]>(DEFAULT_PRESETS);
   const [enableSound, setEnableSound] = useState(true);
   const [selectedSoundType, setSelectedSoundType] = useState<SoundType>("standard");
+  const [displaySettings, setDisplaySettings] = useState<DisplaySettings>({ targetMonitorName: null });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -29,6 +30,11 @@ export function usePresets() {
             const savedSoundType = await store.get<SoundType>("selectedSoundType");
             if (savedSoundType) {
                 setSelectedSoundType(savedSoundType);
+            }
+
+            const savedDisplaySettings = await store.get<DisplaySettings>("displaySettings");
+            if (savedDisplaySettings) {
+                setDisplaySettings(savedDisplaySettings);
             }
         } catch (e) {
             console.error("Failed to load presets/settings from store", e);
@@ -75,13 +81,27 @@ export function usePresets() {
       }
   };
 
+  const saveDisplaySettings = async (settings: DisplaySettings) => {
+      setDisplaySettings(settings);
+      try {
+          const store = await load(PRESETS_FILE);
+          await store.set("displaySettings", settings);
+          await store.save();
+      } catch (e) {
+          console.error("Failed to save display settings", e);
+          throw e;
+      }
+  };
+
   return {
       presets,
       enableSound,
       selectedSoundType,
+      displaySettings,
       loading,
       savePresets,
       saveEnableSound,
-      saveSelectedSoundType
+      saveSelectedSoundType,
+      saveDisplaySettings
   };
 }

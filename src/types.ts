@@ -16,3 +16,7 @@ export interface Preset {
 }
 
 export type SoundType = "standard" | "electronic" | "bell" | "chime";
+
+export interface DisplaySettings {
+    targetMonitorName: string | null;
+}
