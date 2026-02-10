@@ -70,6 +70,6 @@ jobs:
           tagName: ${{ github.ref_name }}
           releaseName: 'App v${{ github.ref_name }}'
           releaseBody: 'Release ${{ github.ref_name }}'
-          releaseDraft: true
+          releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
