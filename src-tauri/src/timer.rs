@@ -1,7 +1,7 @@
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tauri::{AppHandle, Emitter};
-use tokio::time::sleep;
+use tokio::time::{interval, MissedTickBehavior};
 
 pub struct TimerState {
     pub remaining_seconds: i64,
@@ -20,7 +20,16 @@ impl Default for TimerState {
 }
 
 pub async fn run_timer_loop(app_handle: AppHandle, state: Arc<Mutex<TimerState>>) {
+    let mut interval = interval(Duration::from_secs(1));
+    interval.set_missed_tick_behavior(MissedTickBehavior::Skip);
+
+    // Consume the immediate first tick
+    interval.tick().await;
+
     loop {
+        // Wait for the next tick (1 second)
+        interval.tick().await;
+
         let current_remaining;
         
         {
@@ -40,8 +49,6 @@ pub async fn run_timer_loop(app_handle: AppHandle, state: Arc<Mutex<TimerState>>
         if current_remaining == 0 {
             let _ = app_handle.emit("timer-finished", ());
         }
-
-        sleep(Duration::from_secs(1)).await;
     }
 }
 
