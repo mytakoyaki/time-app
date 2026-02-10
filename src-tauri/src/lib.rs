@@ -15,9 +15,9 @@ fn greet(name: &str) -> String {
 async fn start_timer(app_handle: tauri::AppHandle, state: tauri::State<'_, Arc<Mutex<TimerState>>>, duration_seconds: i64) -> Result<(), String> {
     let mut timer_state = state.lock().map_err(|e| e.to_string())?;
 
-    if timer_state.is_running {
-        return Err("Timer is already running".to_string());
-    }
+    // もしすでに実行中なら、古いセッションを無効化するためにIDを増やす
+    timer_state.session_id += 1;
+    let new_session_id = timer_state.session_id;
 
     timer_state.remaining_seconds = duration_seconds;
     timer_state.is_running = true;
@@ -26,7 +26,7 @@ async fn start_timer(app_handle: tauri::AppHandle, state: tauri::State<'_, Arc<M
     let state_clone = state.inner().clone();
 
     tokio::spawn(async move {
-        run_timer_loop(app_handle_clone, state_clone).await;
+        run_timer_loop(app_handle_clone, state_clone, new_session_id).await;
     });
 
     Ok(())
