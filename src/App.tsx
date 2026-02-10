@@ -46,15 +46,27 @@ function App() {
     }
   }, [isMirrorMode]);
 
+  // クリーンアップ：メインウィンドウが閉じられたらミラーも閉じる
+  useEffect(() => {
+    if (isMirrorMode) return;
+    const handleUnload = () => {
+        if (isMirrorOpen) closeMirrorWindow();
+    };
+    window.addEventListener("beforeunload", handleUnload);
+    return () => window.removeEventListener("beforeunload", handleUnload);
+  }, [isMirrorOpen, isMirrorMode]);
+
   const handleStartSetup = (stages: TimerStage[]) => {
       setupTimer(stages);
       setView("timer");
   };
 
-  // 2画面開始処理を統合
   const handleStartMirror = async (stages: TimerStage[]) => {
+      // ウィンドウを先に開く
       await openMirrorWindow(displaySettings);
-      handleStartSetup(stages);
+      // その後タイマーをセットアップ
+      await setupTimer(stages);
+      setView("timer");
   };
 
   const handleNextStageWrapper = async () => {

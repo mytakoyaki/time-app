@@ -77,7 +77,7 @@ export function TimerView({
 
       {!effectivePresentMode && (
           <div className="controls">
-            {currentStageIndex < timerStages.length && (
+            {currentStageIndex < timerStages.length ? (
                 <>
                 <button id="start-timer" onClick={onStart} disabled={isTimerRunning}>
                   {isTimerRunning ? "計測中" : "開始"}
@@ -89,7 +89,7 @@ export function TimerView({
                   リセット
                 </button>
                 </>
-            )}
+            ) : null}
             
              <button id="next-stage" onClick={onNext}>
                 {currentStageIndex < timerStages.length - 1 ? "次のステージへ" : "終了する"}
@@ -106,7 +106,9 @@ export function TimerView({
           </div>
       )}
 
-      <p id="status-message" style={effectivePresentMode ? {display: 'none'} : {}}>{statusMessage}</p>
+      {!effectivePresentMode && (
+          <p id="status-message">{statusMessage}</p>
+      )}
     </div>
   );
 }

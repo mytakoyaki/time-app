@@ -38,12 +38,10 @@ export function useTimer(enableSound: boolean, selectedSoundType: SoundType = "s
     let unlistenSync: (() => void) | undefined;
     
     const setupListeners = async () => {
-      // 残り秒数の更新（Rust側から）
       unlistenUpdate = await listen<number>("timer-update", (event) => {
         const remaining = event.payload;
         setCurrentRemainingSeconds(remaining);
         
-        // 音声再生（ミラーウィンドウでは鳴らさない）
         if (!isMirror) {
             const stages = timerStagesRef.current;
             const index = currentStageIndexRef.current;
@@ -64,17 +62,15 @@ export function useTimer(enableSound: boolean, selectedSoundType: SoundType = "s
         }
       });
 
-      // 状態の同期（他方のウィンドウから）
       unlistenSync = await listen<any>("timer-state-sync", (event) => {
         const { stages, index, running, remaining, message } = event.payload;
-        setTimerStages(stages);
-        setCurrentStageIndex(index);
-        setIsTimerRunning(running);
-        setCurrentRemainingSeconds(remaining);
-        if (message) setStatusMessage(message);
+        if (stages !== undefined) setTimerStages(stages);
+        if (index !== undefined) setCurrentStageIndex(index);
+        if (running !== undefined) setIsTimerRunning(running);
+        if (remaining !== undefined) setCurrentRemainingSeconds(remaining);
+        if (message !== undefined) setStatusMessage(message);
       });
 
-      // ミラーウィンドウが起動したときに最新の状態をリクエストする
       if (isMirror) {
           emit("request-timer-sync");
       }
@@ -88,7 +84,6 @@ export function useTimer(enableSound: boolean, selectedSoundType: SoundType = "s
     };
   }, [isMirror]);
 
-  // メインウィンドウでのみ動作する：状態を他方のウィンドウに送る
   const syncState = (overrides?: any) => {
     if (isMirror) return;
     emit("timer-state-sync", {
@@ -101,7 +96,6 @@ export function useTimer(enableSound: boolean, selectedSoundType: SoundType = "s
     });
   };
 
-  // メインウィンドウでのみ動作する：リクエストに応じて現在の状態を送る
   useEffect(() => {
     if (isMirror) return;
     let unlistenRequest: (() => void) | undefined;
@@ -113,13 +107,22 @@ export function useTimer(enableSound: boolean, selectedSoundType: SoundType = "s
   }, [isMirror, timerStages, currentStageIndex, isTimerRunning, currentRemainingSeconds, statusMessage]);
 
   const setupTimer = async (stages: TimerStage[]) => {
+      const initialRemaining = stages.length > 0 ? stages[0].duration : 0;
+      
       setTimerStages(stages);
       setCurrentStageIndex(0);
       setIsTimerRunning(false);
-      const initialRemaining = stages.length > 0 ? stages[0].duration : 0;
       setCurrentRemainingSeconds(initialRemaining);
+      setStatusMessage("タイマーを開始してください。");
       
-      syncState({ stages, index: 0, running: false, remaining: initialRemaining });
+      // 同期イベントを投げる
+      syncState({ 
+          stages, 
+          index: 0, 
+          running: false, 
+          remaining: initialRemaining,
+          message: "タイマーを開始してください。"
+      });
 
       try {
         await invoke("reset_timer");
@@ -133,8 +136,10 @@ export function useTimer(enableSound: boolean, selectedSoundType: SoundType = "s
     if (currentStageIndex >= timerStages.length) return;
 
     const duration = durationSecondsOverride !== undefined ? durationSecondsOverride : currentRemainingSeconds;
+    const currentStage = timerStages[currentStageIndex];
+    
     setIsTimerRunning(true);
-    const msg = `${timerStages[currentStageIndex].name}を開始しました。`;
+    const msg = `${currentStage.name}を開始しました。`;
     setStatusMessage(msg);
 
     syncState({ running: true, message: msg, remaining: duration });
@@ -194,8 +199,6 @@ export function useTimer(enableSound: boolean, selectedSoundType: SoundType = "s
           setCurrentRemainingSeconds(nextDuration);
           setStatusMessage(msg);
           
-          // この時点では isTimerRunning は false になっているので、
-          // startTimer 内で syncState が呼ばれる
           await startTimer(nextDuration);
           return true;
       } else {
