@@ -14,3 +14,5 @@ export interface Preset {
     pWarn: number;
     qWarn: number;
 }
+
+export type SoundType = "standard" | "electronic" | "bell" | "chime";

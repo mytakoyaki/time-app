@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePresets } from "./hooks/usePresets";
 import { useTimer } from "./hooks/useTimer";
 import { SetupView } from "./components/SetupView";
@@ -10,7 +10,7 @@ function App() {
   const [view, setView] = useState<"setup" | "timer" | "preset-manager">("setup");
   const [deductOvertime, setDeductOvertime] = useState(true);
   
-  const { presets, enableSound, savePresets, saveEnableSound } = usePresets();
+  const { presets, enableSound, selectedSoundType, savePresets, saveEnableSound, saveSelectedSoundType } = usePresets();
   const { 
       timerStages, 
       currentStageIndex, 
@@ -23,7 +23,7 @@ function App() {
       stopTimer, 
       resetTimer, 
       nextStage 
-  } = useTimer(enableSound);
+  } = useTimer(enableSound, selectedSoundType);
 
   const handleStartSetup = (stages: TimerStage[]) => {
       setupTimer(stages);
@@ -42,6 +42,52 @@ function App() {
       setView("setup");
       setStatusMessage("");
   }
+
+  // --- Keyboard Shortcuts (2A) ---
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // フォーム入力中はショートカットを無効化
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      switch (e.key) {
+        case " ": // Space: Start/Stop
+          e.preventDefault();
+          if (view === "timer") {
+            if (isTimerRunning) stopTimer();
+            else startTimer();
+          } else if (view === "setup") {
+            // Setup画面でSpaceを押すと開始（利便性のため）
+            const startBtn = document.getElementById("go-to-timer-view");
+            startBtn?.click();
+          }
+          break;
+        case "Enter": // Enter: Next Stage
+          if (view === "timer") {
+            handleNextStageWrapper();
+          }
+          break;
+        case "r":
+        case "R": // R: Reset
+          if (view === "timer") {
+            resetTimer();
+          }
+          break;
+        case "Escape": // Esc: Back to setup
+          if (view === "timer") {
+            setView("setup");
+            stopTimer();
+          } else if (view === "preset-manager") {
+            handleClosePresetManager();
+          }
+          break;
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [view, isTimerRunning, stopTimer, startTimer, handleNextStageWrapper]);
 
   if (view === "preset-manager") {
       return (
@@ -76,6 +122,8 @@ function App() {
             onStartTimer={handleStartSetup}
             enableSound={enableSound}
             onToggleSound={saveEnableSound}
+            selectedSoundType={selectedSoundType}
+            onSoundTypeChange={saveSelectedSoundType}
             deductOvertime={deductOvertime}
             setDeductOvertime={setDeductOvertime}
             statusMessage={statusMessage}

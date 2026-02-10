@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Preset, TimerStage } from "../types";
+import { Preset, TimerStage, SoundType } from "../types";
 
 interface SetupViewProps {
   presets: Preset[];
@@ -7,6 +7,8 @@ interface SetupViewProps {
   onStartTimer: (stages: TimerStage[]) => void;
   enableSound: boolean;
   onToggleSound: (enabled: boolean) => void;
+  selectedSoundType: SoundType;
+  onSoundTypeChange: (val: SoundType) => void;
   deductOvertime: boolean;
   setDeductOvertime: (val: boolean) => void;
   statusMessage?: string;
@@ -18,6 +20,8 @@ export function SetupView({
   onStartTimer,
   enableSound,
   onToggleSound,
+  selectedSoundType,
+  onSoundTypeChange,
   deductOvertime,
   setDeductOvertime,
   statusMessage
@@ -165,6 +169,18 @@ export function SetupView({
                 style={{width: "20px", height: "20px"}} 
             />
             <label htmlFor="enable-sound" style={{cursor: "pointer"}}>通知音を鳴らす</label>
+            
+            <select 
+                value={selectedSoundType} 
+                onChange={(e) => onSoundTypeChange(e.target.value as SoundType)}
+                disabled={!enableSound}
+                style={{marginLeft: "1rem", padding: "0.3rem", fontSize: "1rem", background: "#222", color: "white", border: "1px solid #444", borderRadius: "4px"}}
+            >
+                <option value="standard">標準 (サイン波)</option>
+                <option value="electronic">電子音 (矩形波)</option>
+                <option value="bell">ベル風</option>
+                <option value="chime">チャイム風</option>
+            </select>
         </div>
         <div className="timer-option-row">
             <input 

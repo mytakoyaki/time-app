@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { TimerStage } from "../types";
+import { TimerStage, SoundType } from "../types";
 import { playWarningSound, playOvertimeSound, playFinishSound } from "../utils/audio";
 
-export function useTimer(enableSound: boolean) {
+export function useTimer(enableSound: boolean, selectedSoundType: SoundType = "standard") {
   const [timerStages, setTimerStages] = useState<TimerStage[]>([]);
   const [currentStageIndex, setCurrentStageIndex] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
@@ -15,6 +15,7 @@ export function useTimer(enableSound: boolean) {
   const timerStagesRef = useRef<TimerStage[]>([]);
   const currentStageIndexRef = useRef(0);
   const enableSoundRef = useRef(enableSound);
+  const selectedSoundTypeRef = useRef(selectedSoundType);
 
   useEffect(() => {
     timerStagesRef.current = timerStages;
@@ -29,6 +30,10 @@ export function useTimer(enableSound: boolean) {
   }, [enableSound]);
 
   useEffect(() => {
+    selectedSoundTypeRef.current = selectedSoundType;
+  }, [selectedSoundType]);
+
+  useEffect(() => {
     let unlistenUpdate: (() => void) | undefined;
     
     const setupListeners = async () => {
@@ -40,6 +45,7 @@ export function useTimer(enableSound: boolean) {
         const stages = timerStagesRef.current;
         const index = currentStageIndexRef.current;
         const soundOn = enableSoundRef.current;
+        const soundType = selectedSoundTypeRef.current;
         
         if (soundOn && stages.length > 0 && index < stages.length) {
             const currentStage = stages[index];
@@ -47,15 +53,15 @@ export function useTimer(enableSound: boolean) {
             
             // Warning sound
             if (!isQA && remaining === currentStage.warningThreshold && remaining > 0) {
-                playWarningSound();
+                playWarningSound(soundType);
             }
             
             // Overtime/Finish sound (at exactly 0)
             if (remaining === 0) {
                 if (isQA) {
-                    playFinishSound(); // QA finish
+                    playFinishSound(soundType); // QA finish
                 } else {
-                    playOvertimeSound(); // Presentation finish
+                    playOvertimeSound(soundType); // Presentation finish
                 }
             }
         }
