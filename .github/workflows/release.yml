@@ -2,8 +2,6 @@ name: Release Application
 
 on:
   push:
-    branches:
-      - master
     tags:
       - 'v*'
   workflow_dispatch:
